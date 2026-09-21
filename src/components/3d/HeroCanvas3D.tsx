@@ -3,24 +3,16 @@
 import React, { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { playClickSound, playWhooshSound } from "@/utils/audio";
-import { RotateCw, Eye, Sparkles, Activity } from "lucide-react";
 
 export default function HeroCanvas3D() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [isInteracting, setIsInteracting] = useState(false);
-  const [renderMode, setRenderMode] = useState<"wireframe" | "points" | "solid">("wireframe");
-  const [fps, setFps] = useState(60);
-  const [polyCount, setPolyCount] = useState(1280);
-
-  // References to communicate with the Three.js render loop
-  const modeRef = useRef(renderMode);
-  modeRef.current = renderMode;
+  const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
-    // --- Scene Setup ---
+    // Scene
     const scene = new THREE.Scene();
 
     const camera = new THREE.PerspectiveCamera(
@@ -29,7 +21,7 @@ export default function HeroCanvas3D() {
       0.1,
       1000
     );
-    camera.position.z = 7;
+    camera.position.z = 6;
 
     const renderer = new THREE.WebGLRenderer({
       antialias: true,
@@ -40,179 +32,127 @@ export default function HeroCanvas3D() {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     container.appendChild(renderer.domElement);
 
-    // --- Lighting ---
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
+    // Ambient & Point Lights
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
     scene.add(ambientLight);
 
-    const pointLight1 = new THREE.PointLight(0x00f0ff, 3.5, 50);
-    pointLight1.position.set(5, 5, 5);
-    scene.add(pointLight1);
+    const pointLight = new THREE.PointLight(0x00f0ff, 2.5, 40);
+    pointLight.position.set(4, 4, 4);
+    scene.add(pointLight);
 
-    const pointLight2 = new THREE.PointLight(0x8b5cf6, 2.8, 50);
-    pointLight2.position.set(-5, -5, -3);
+    const pointLight2 = new THREE.PointLight(0x10b981, 2, 40);
+    pointLight2.position.set(-4, -4, -2);
     scene.add(pointLight2);
 
-    // --- Core 3D Geometries ---
-    const mainGroup = new THREE.Group();
-    scene.add(mainGroup);
+    // 3D Core Group
+    const group = new THREE.Group();
+    scene.add(group);
 
-    // 1. Primary Polyhedron (Icosahedron)
-    const icoGeo = new THREE.IcosahedronGeometry(1.8, 1);
-    setPolyCount(icoGeo.attributes.position.count);
-
-    // Wireframe material & mesh
-    const wireMaterial = new THREE.MeshBasicMaterial({
+    // 1. Primary Polyhedron (Geometric 3D Wireframe)
+    const geometry = new THREE.IcosahedronGeometry(1.6, 1);
+    const wireMat = new THREE.MeshBasicMaterial({
       color: 0x00f0ff,
       wireframe: true,
       transparent: true,
-      opacity: 0.65,
+      opacity: 0.7,
     });
-    const icoWireMesh = new THREE.Mesh(icoGeo, wireMaterial);
-
-    // Solid physical material & mesh
-    const solidMaterial = new THREE.MeshStandardMaterial({
-      color: 0x0f121d,
-      roughness: 0.3,
-      metalness: 0.85,
-      wireframe: false,
-    });
-    const icoSolidMesh = new THREE.Mesh(icoGeo, solidMaterial);
-
-    // Points particle material & mesh
-    const pointsMaterial = new THREE.PointsMaterial({
-      color: 0x00f0ff,
-      size: 0.05,
-      transparent: true,
-      opacity: 0.9,
-    });
-    const icoPoints = new THREE.Points(icoGeo, pointsMaterial);
-
-    // Initial addition
-    mainGroup.add(icoWireMesh);
+    const mesh = new THREE.Mesh(geometry, wireMat);
+    group.add(mesh);
 
     // 2. Inner Glowing Core (Octahedron)
-    const coreGeo = new THREE.OctahedronGeometry(0.8, 0);
+    const coreGeo = new THREE.OctahedronGeometry(0.7, 0);
     const coreMat = new THREE.MeshBasicMaterial({
       color: 0xffffff,
       wireframe: true,
       transparent: true,
-      opacity: 0.4,
+      opacity: 0.5,
     });
     const coreMesh = new THREE.Mesh(coreGeo, coreMat);
-    mainGroup.add(coreMesh);
+    group.add(coreMesh);
 
     // 3. Orbital Gyroscope Rings
-    const ringMat1 = new THREE.LineBasicMaterial({ color: 0x00f0ff, transparent: true, opacity: 0.35 });
-    const ringMat2 = new THREE.LineBasicMaterial({ color: 0x8b5cf6, transparent: true, opacity: 0.35 });
-
-    const ringGeo1 = new THREE.BufferGeometry();
-    const ringPoints1: number[] = [];
-    const segments = 64;
-    for (let i = 0; i <= segments; i++) {
-      const theta = (i / segments) * Math.PI * 2;
-      ringPoints1.push(Math.cos(theta) * 2.5, Math.sin(theta) * 2.5, 0);
-    }
-    ringGeo1.setAttribute("position", new THREE.Float32BufferAttribute(ringPoints1, 3));
-    const ring1 = new THREE.Line(ringGeo1, ringMat1);
-    ring1.rotation.x = Math.PI / 4;
-    mainGroup.add(ring1);
-
-    const ringGeo2 = new THREE.BufferGeometry();
-    const ringPoints2: number[] = [];
-    for (let i = 0; i <= segments; i++) {
-      const theta = (i / segments) * Math.PI * 2;
-      ringPoints2.push(Math.cos(theta) * 2.8, 0, Math.sin(theta) * 2.8);
-    }
-    ringGeo2.setAttribute("position", new THREE.Float32BufferAttribute(ringPoints2, 3));
-    const ring2 = new THREE.Line(ringGeo2, ringMat2);
-    ring2.rotation.z = Math.PI / 6;
-    mainGroup.add(ring2);
-
-    // 4. Background Starfield / Particle Cloud
-    const particleCount = 700;
-    const particleGeo = new THREE.BufferGeometry();
-    const particlePositions = new Float32Array(particleCount * 3);
-
-    for (let i = 0; i < particleCount * 3; i += 3) {
-      particlePositions[i] = (Math.random() - 0.5) * 25;
-      particlePositions[i + 1] = (Math.random() - 0.5) * 25;
-      particlePositions[i + 2] = (Math.random() - 0.5) * 20 - 5;
-    }
-
-    particleGeo.setAttribute("position", new THREE.BufferAttribute(particlePositions, 3));
-    const starFieldMat = new THREE.PointsMaterial({
-      color: 0x8892b0,
-      size: 0.035,
+    const ringMat = new THREE.LineBasicMaterial({
+      color: 0x00f0ff,
       transparent: true,
-      opacity: 0.45,
+      opacity: 0.35,
     });
-    const starField = new THREE.Points(particleGeo, starFieldMat);
+    const ringGeo = new THREE.BufferGeometry();
+    const points: number[] = [];
+    for (let i = 0; i <= 64; i++) {
+      const theta = (i / 64) * Math.PI * 2;
+      points.push(Math.cos(theta) * 2.3, Math.sin(theta) * 2.3, 0);
+    }
+    ringGeo.setAttribute("position", new THREE.Float32BufferAttribute(points, 3));
+    const ring = new THREE.Line(ringGeo, ringMat);
+    ring.rotation.x = Math.PI / 4;
+    group.add(ring);
+
+    // 4. Starfield Particles
+    const particleCount = 400;
+    const particleGeo = new THREE.BufferGeometry();
+    const positions = new Float32Array(particleCount * 3);
+    for (let i = 0; i < particleCount * 3; i += 3) {
+      positions[i] = (Math.random() - 0.5) * 18;
+      positions[i + 1] = (Math.random() - 0.5) * 18;
+      positions[i + 2] = (Math.random() - 0.5) * 15 - 3;
+    }
+    particleGeo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    const starMat = new THREE.PointsMaterial({
+      color: 0x64748b,
+      size: 0.04,
+      transparent: true,
+      opacity: 0.5,
+    });
+    const starField = new THREE.Points(particleGeo, starMat);
     scene.add(starField);
 
-    // --- Interaction Physics ---
-    let mouseX = 0;
-    let mouseY = 0;
+    // Mouse Tracking & Interaction
     let targetX = 0;
     let targetY = 0;
-    let isDragging = false;
-    let previousMousePosition = { x: 0, y: 0 };
+    let mouseX = 0;
+    let mouseY = 0;
+    let dragging = false;
+    let prevMouse = { x: 0, y: 0 };
     let pulseScale = 1;
 
-    const onMouseMove = (e: MouseEvent) => {
+    const handleMouseMove = (e: MouseEvent) => {
       const rect = container.getBoundingClientRect();
       const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
       const y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+      targetX = x * 0.7;
+      targetY = y * 0.5;
 
-      targetX = x * 0.8;
-      targetY = y * 0.6;
-
-      if (isDragging) {
-        const deltaX = e.clientX - previousMousePosition.x;
-        const deltaY = e.clientY - previousMousePosition.y;
-
-        mainGroup.rotation.y += deltaX * 0.008;
-        mainGroup.rotation.x += deltaY * 0.008;
-
-        previousMousePosition = { x: e.clientX, y: e.clientY };
+      if (dragging) {
+        const dx = e.clientX - prevMouse.x;
+        const dy = e.clientY - prevMouse.y;
+        group.rotation.y += dx * 0.01;
+        group.rotation.x += dy * 0.01;
+        prevMouse = { x: e.clientX, y: e.clientY };
       }
     };
 
-    const onMouseDown = (e: MouseEvent) => {
-      isDragging = true;
-      setIsInteracting(true);
-      previousMousePosition = { x: e.clientX, y: e.clientY };
+    const handleMouseDown = (e: MouseEvent) => {
+      dragging = true;
+      setIsDragging(true);
+      prevMouse = { x: e.clientX, y: e.clientY };
       playWhooshSound();
     };
 
-    const onMouseUp = () => {
-      isDragging = false;
-      setIsInteracting(false);
+    const handleMouseUp = () => {
+      dragging = false;
+      setIsDragging(false);
     };
 
-    const onClick = () => {
-      pulseScale = 1.35;
+    const handleClick = () => {
+      pulseScale = 1.25;
       playClickSound();
     };
 
-    window.addEventListener("mousemove", onMouseMove);
-    container.addEventListener("mousedown", onMouseDown);
-    window.addEventListener("mouseup", onMouseUp);
-    container.addEventListener("click", onClick);
+    window.addEventListener("mousemove", handleMouseMove);
+    container.addEventListener("mousedown", handleMouseDown);
+    window.addEventListener("mouseup", handleMouseUp);
+    container.addEventListener("click", handleClick);
 
-    // Touch Support
-    const onTouchMove = (e: TouchEvent) => {
-      if (e.touches.length > 0) {
-        const touch = e.touches[0];
-        const rect = container.getBoundingClientRect();
-        const x = ((touch.clientX - rect.left) / rect.width) * 2 - 1;
-        const y = -((touch.clientY - rect.top) / rect.height) * 2 + 1;
-        targetX = x * 0.8;
-        targetY = y * 0.6;
-      }
-    };
-    container.addEventListener("touchmove", onTouchMove, { passive: true });
-
-    // Resize Handler
     const handleResize = () => {
       if (!container) return;
       camera.aspect = container.clientWidth / container.clientHeight;
@@ -221,87 +161,44 @@ export default function HeroCanvas3D() {
     };
     window.addEventListener("resize", handleResize);
 
-    // --- Animation & Render Loop ---
-    let frameCount = 0;
-    let lastTime = performance.now();
-    let animationFrameId: number;
-
-    const clock = new THREE.Clock();
-
+    // Animation Loop
+    let animId: number;
     const animate = () => {
-      animationFrameId = requestAnimationFrame(animate);
-      const elapsedTime = clock.getElapsedTime();
+      animId = requestAnimationFrame(animate);
 
-      // Update mesh based on renderMode state
-      if (modeRef.current === "points") {
-        if (mainGroup.children.includes(icoWireMesh)) mainGroup.remove(icoWireMesh);
-        if (mainGroup.children.includes(icoSolidMesh)) mainGroup.remove(icoSolidMesh);
-        if (!mainGroup.children.includes(icoPoints)) mainGroup.add(icoPoints);
-      } else if (modeRef.current === "solid") {
-        if (mainGroup.children.includes(icoWireMesh)) mainGroup.remove(icoWireMesh);
-        if (mainGroup.children.includes(icoPoints)) mainGroup.remove(icoPoints);
-        if (!mainGroup.children.includes(icoSolidMesh)) mainGroup.add(icoSolidMesh);
-      } else {
-        if (mainGroup.children.includes(icoSolidMesh)) mainGroup.remove(icoSolidMesh);
-        if (mainGroup.children.includes(icoPoints)) mainGroup.remove(icoPoints);
-        if (!mainGroup.children.includes(icoWireMesh)) mainGroup.add(icoWireMesh);
-      }
-
-      // Smooth camera & group parallax
       mouseX += (targetX - mouseX) * 0.05;
       mouseY += (targetY - mouseY) * 0.05;
 
-      camera.position.x = mouseX * 1.2;
-      camera.position.y = mouseY * 1.2;
+      camera.position.x = mouseX * 1.1;
+      camera.position.y = mouseY * 1.1;
       camera.lookAt(0, 0, 0);
 
-      // Auto rotation when not dragging
-      if (!isDragging) {
-        mainGroup.rotation.y += 0.004;
-        mainGroup.rotation.x += 0.002;
+      if (!dragging) {
+        group.rotation.y += 0.005;
+        group.rotation.x += 0.002;
       }
 
-      // Independent rotations for inner objects
       coreMesh.rotation.y -= 0.015;
-      coreMesh.rotation.z += 0.008;
+      ring.rotation.z += 0.008;
+      starField.rotation.y += 0.0005;
 
-      ring1.rotation.z += 0.006;
-      ring2.rotation.y += 0.005;
-
-      starField.rotation.y = elapsedTime * 0.02;
-
-      // Pulse physics animation
       if (pulseScale > 1) {
         pulseScale -= 0.02;
         if (pulseScale < 1) pulseScale = 1;
       }
-      icoWireMesh.scale.set(pulseScale, pulseScale, pulseScale);
-      icoSolidMesh.scale.set(pulseScale, pulseScale, pulseScale);
-      icoPoints.scale.set(pulseScale, pulseScale, pulseScale);
-
-      // Measure FPS
-      frameCount++;
-      const currentTime = performance.now();
-      if (currentTime >= lastTime + 1000) {
-        setFps(Math.round((frameCount * 1000) / (currentTime - lastTime)));
-        frameCount = 0;
-        lastTime = currentTime;
-      }
+      mesh.scale.set(pulseScale, pulseScale, pulseScale);
 
       renderer.render(scene, camera);
     };
-
     animate();
 
-    // Cleanup
     return () => {
-      window.removeEventListener("mousemove", onMouseMove);
-      container.removeEventListener("mousedown", onMouseDown);
-      window.removeEventListener("mouseup", onMouseUp);
-      container.removeEventListener("click", onClick);
-      container.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("mousemove", handleMouseMove);
+      container.removeEventListener("mousedown", handleMouseDown);
+      window.removeEventListener("mouseup", handleMouseUp);
+      container.removeEventListener("click", handleClick);
       window.removeEventListener("resize", handleResize);
-      cancelAnimationFrame(animationFrameId);
+      cancelAnimationFrame(animId);
       if (container.contains(renderer.domElement)) {
         container.removeChild(renderer.domElement);
       }
@@ -310,92 +207,23 @@ export default function HeroCanvas3D() {
   }, []);
 
   return (
-    <div className="relative w-full h-[420px] md:h-[560px] flex items-center justify-center overflow-hidden rounded-2xl bg-[#08090e]/60 border border-white/10 backdrop-blur-md shadow-2xl">
-      {/* 3D WebGL Canvas Container */}
+    <div className="relative w-full h-[360px] sm:h-[420px] md:h-[480px] flex items-center justify-center overflow-hidden rounded-2xl bg-[#090b12] border border-white/10 shadow-2xl">
+      {/* 3D WebGL Canvas */}
       <div
         ref={containerRef}
-        className={`w-full h-full cursor-grab ${isInteracting ? "cursor-grabbing" : ""}`}
-        title="Klik dan geser untuk memutar objek 3D"
+        className={`w-full h-full cursor-grab ${isDragging ? "cursor-grabbing" : ""}`}
+        title="Klik dan putar objek 3D"
       />
 
-      {/* Cybernetic HUD Overlays */}
-      <div className="absolute top-4 left-4 flex flex-col gap-1.5 pointer-events-none select-none font-mono text-[11px] text-zinc-400">
-        <div className="flex items-center gap-2 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded border border-white/10">
-          <span className="w-2 h-2 rounded-full bg-cyber-cyan animate-ping" />
-          <span className="text-zinc-200 font-semibold tracking-wider">3D SPATIAL ENGINE</span>
-          <span className="text-zinc-500">|</span>
-          <span className="text-cyber-cyan">WEBGL 2.0</span>
-        </div>
-        <div className="flex items-center gap-3 bg-black/40 backdrop-blur-sm px-2.5 py-1 rounded border border-white/5 text-[10px]">
-          <span className="flex items-center gap-1">
-            <Activity className="w-3 h-3 text-emerald-400" />
-            <span>{fps} FPS</span>
-          </span>
-          <span className="text-zinc-600">•</span>
-          <span>VERTICES: {polyCount}</span>
-          <span className="text-zinc-600">•</span>
-          <span className="text-zinc-400">STATE: {isInteracting ? "ACTIVE DRAG" : "AUTONOMOUS"}</span>
-        </div>
+      {/* Clean Minimalist Badge */}
+      <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/10 font-mono text-xs text-zinc-300 pointer-events-none select-none">
+        <span className="w-2 h-2 rounded-full bg-cyber-cyan animate-pulse" />
+        <span className="font-semibold">3D Interactive Core</span>
       </div>
 
-      {/* Mode Switcher Buttons */}
-      <div className="absolute bottom-4 left-4 flex items-center gap-1.5 bg-black/70 backdrop-blur-md p-1 rounded-lg border border-white/10 font-mono text-xs z-10">
-        <button
-          onClick={() => {
-            setRenderMode("wireframe");
-            playClickSound();
-          }}
-          className={`flex items-center gap-1 px-2.5 py-1 rounded transition-colors ${
-            renderMode === "wireframe"
-              ? "bg-cyber-cyan/20 text-cyber-cyan border border-cyber-cyan/40"
-              : "text-zinc-400 hover:text-white"
-          }`}
-        >
-          <RotateCw className="w-3 h-3" />
-          <span>Wireframe</span>
-        </button>
-
-        <button
-          onClick={() => {
-            setRenderMode("points");
-            playClickSound();
-          }}
-          className={`flex items-center gap-1 px-2.5 py-1 rounded transition-colors ${
-            renderMode === "points"
-              ? "bg-cyber-cyan/20 text-cyber-cyan border border-cyber-cyan/40"
-              : "text-zinc-400 hover:text-white"
-          }`}
-        >
-          <Sparkles className="w-3 h-3" />
-          <span>Particles</span>
-        </button>
-
-        <button
-          onClick={() => {
-            setRenderMode("solid");
-            playClickSound();
-          }}
-          className={`flex items-center gap-1 px-2.5 py-1 rounded transition-colors ${
-            renderMode === "solid"
-              ? "bg-cyber-cyan/20 text-cyber-cyan border border-cyber-cyan/40"
-              : "text-zinc-400 hover:text-white"
-          }`}
-        >
-          <Eye className="w-3 h-3" />
-          <span>Solid</span>
-        </button>
-      </div>
-
-      {/* Interaction Hint */}
-      <div className="absolute bottom-4 right-4 pointer-events-none select-none font-mono text-[10px] text-zinc-500 bg-black/40 backdrop-blur-sm px-2.5 py-1 rounded border border-white/5 hidden sm:block">
-        DRAG TO ROTATE • CLICK TO PULSE • PARALLAX ACTIVE
-      </div>
-
-      <div className="absolute top-2 right-2 font-mono text-[10px] text-zinc-600 select-none pointer-events-none">
-        +01
-      </div>
-      <div className="absolute bottom-2 left-2 font-mono text-[10px] text-zinc-600 select-none pointer-events-none">
-        +02
+      {/* Floating Hint */}
+      <div className="absolute bottom-4 right-4 px-3 py-1 rounded-lg bg-black/50 backdrop-blur-sm border border-white/5 font-mono text-[11px] text-zinc-400 pointer-events-none select-none hidden sm:block">
+        DRAG TO ROTATE 360°
       </div>
     </div>
   );

@@ -9,35 +9,36 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Adnan Ferdiansyah — Creative Technologist & 3D Web Architect",
+  title: "Adnan Ferdiansyah — Jual Source Code Aplikasi Android & Website",
   description:
-    "Official portfolio of Adnan Ferdiansyah. Engineering tactile 3D WebGL interfaces, real-time digital signal processing, and high-performance client architectures.",
+    "Katalog Full Source Code resmi dari Adnan Ferdiansyah. Aplikasi Android (NanzTube, Beatles Music) & Website (NanzMusify, QuickRepos, Qur'an Digital, ModKite). WhatsApp: +62 831-8656-1414.",
   keywords: [
     "Adnan Ferdiansyah",
-    "Creative Technologist",
-    "3D Web Architect",
-    "Three.js Portfolio",
-    "WebGL Developer",
-    "Next.js Developer Indonesia",
-    "Frontend Architect Jakarta",
+    "Source Code Aplikasi Android",
+    "Jual Source Code Web",
+    "NanzTube APK Source Code",
+    "Beatles Music Player Kotlin",
+    "NanzMusify",
+    "QuickRepos",
+    "Quran Digital",
+    "ModKite",
   ],
   authors: [{ name: "Adnan Ferdiansyah" }],
   creator: "Adnan Ferdiansyah",
   openGraph: {
-    title: "Adnan Ferdiansyah — Creative Technologist & 3D Web Architect",
+    title: "Adnan Ferdiansyah — Jual Source Code Aplikasi Android & Website",
     description:
-      "Engineering tactile 3D WebGL interfaces, real-time audio DSP, and resilient client architectures.",
-    url: "https://adnanferdiansyah.dev",
-    siteName: "Adnan Ferdiansyah Portfolio",
-    locale: "en_US",
+      "Katalog Full Source Code resmi: NanzTube, Beatles Music, NanzMusify, QuickRepos, Qur'an Digital, ModKite. WhatsApp: +62 831-8656-1414.",
+    url: "https://nanasmuda121.github.io",
+    siteName: "Adnan Ferdiansyah Source Code Store",
+    locale: "id_ID",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Adnan Ferdiansyah — Creative Technologist & 3D Web Architect",
+    title: "Adnan Ferdiansyah — Jual Source Code Aplikasi Android & Website",
     description:
-      "Engineering tactile 3D WebGL interfaces, real-time audio DSP, and resilient client architectures.",
-    creator: "@adnan_ferdi",
+      "Katalog Full Source Code resmi: NanzTube, Beatles Music, NanzMusify, QuickRepos, Qur'an Digital, ModKite. WhatsApp: +62 831-8656-1414.",
   },
 };
 
@@ -47,8 +48,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="id" className="dark scroll-smooth">
       <head>
+        <meta httpEquiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+        <meta httpEquiv="Pragma" content="no-cache" />
+        <meta httpEquiv="Expires" content="0" />
         <link
           rel="icon"
           href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>"

@@ -28,8 +28,8 @@ export default function ContactSection() {
       a: "Anda mendapatkan Full Source Code lengkap (.zip / akses repository) beserta aset dan petunjuk cara build APK / deploy website.",
     },
     {
-      q: "Bagaimana cara klaim promo Take All 10K?",
-      a: "Klik tombol 'Ambil Promo 10K Sekarang' atau hubungi WhatsApp saya dengan pesan promo. Penawaran ini berlaku untuk 1 pembeli pertama.",
+      q: "Bagaimana cara melakukan pemesanan?",
+      a: "Klik tombol 'Beli Source' pada produk yang Anda inginkan, lalu konfirmasi pesanan melalui WhatsApp. Saya akan langsung merespons.",
     },
     {
       q: "Metode pembayaran apa saja yang diterima?",
@@ -49,7 +49,7 @@ export default function ContactSection() {
           <div className="lg:col-span-7 space-y-4">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 font-mono text-xs text-emerald-400">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-              <span>ONLINE & SIAP TRANSAKSI</span>
+              <span>ONLINE &amp; SIAP TRANSAKSI</span>
             </div>
 
             <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
@@ -57,7 +57,7 @@ export default function ContactSection() {
             </h2>
 
             <p className="text-sm sm:text-base text-zinc-400 leading-relaxed max-w-xl">
-              Hubungi saya langsung via WhatsApp untuk pertanyaan teknis, demo tambahan, negosiasi, atau pembelian instan.
+              Hubungi saya langsung via WhatsApp untuk pertanyaan teknis, negosiasi, atau pembelian instan.
             </p>
 
             <div className="pt-2 flex flex-wrap items-center gap-3 font-mono text-xs">
@@ -102,7 +102,7 @@ export default function ContactSection() {
               <span>Jaminan Kualitas Kode</span>
             </div>
             <p className="text-zinc-400 leading-relaxed">
-              Setiap proyek telah diuji, memiliki struktur folder rapi tanpa file sampah, dan bebas dari error compile.
+              Setiap proyek telah diuji secara menyeluruh, memiliki struktur folder rapi tanpa file sampah, dan bebas dari error compile.
             </p>
             <div className="text-[11px] text-zinc-500 pt-1">
               Developer: {PORTFOLIO_DATA.identity.fullName} • Indonesia
