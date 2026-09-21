@@ -1,170 +1,133 @@
 "use client";
 
 import React, { useState } from "react";
-import { Mail, Copy, Check, ArrowUpRight, MessageSquare, Send } from "lucide-react";
-import { GithubIcon, LinkedinIcon, TwitterXIcon } from "@/components/ui/Icons";
+import { MessageCircle, Phone, Copy, Check, ShieldCheck, HelpCircle } from "lucide-react";
 import { PORTFOLIO_DATA } from "@/data/portfolioData";
 import { playClickSound, playSuccessSound } from "@/utils/audio";
 import confetti from "canvas-confetti";
 
 export default function ContactSection() {
   const [copied, setCopied] = useState(false);
-  const [noteSent, setNoteSent] = useState(false);
-  const [noteText, setNoteText] = useState("");
 
-  const handleCopyEmail = () => {
-    navigator.clipboard.writeText(PORTFOLIO_DATA.identity.email);
+  const handleCopyPhone = () => {
+    navigator.clipboard.writeText(PORTFOLIO_DATA.identity.phone);
     setCopied(true);
     playSuccessSound();
     confetti({
-      particleCount: 60,
-      spread: 80,
+      particleCount: 40,
+      spread: 60,
       origin: { y: 0.8 },
-      colors: ["#00f0ff", "#ffffff", "#8b5cf6"],
+      colors: ["#10b981", "#ffffff", "#00f0ff"],
     });
     setTimeout(() => setCopied(false), 2500);
   };
 
-  const handleSendQuickNote = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!noteText.trim()) return;
-
-    playSuccessSound();
-    setNoteSent(true);
-    const mailtoUrl = `mailto:${PORTFOLIO_DATA.identity.email}?subject=${encodeURIComponent(
-      "Project Inquiry / Architecture Discussion"
-    )}&body=${encodeURIComponent(noteText)}`;
-    window.open(mailtoUrl, "_blank");
-    setTimeout(() => {
-      setNoteSent(false);
-      setNoteText("");
-    }, 3000);
-  };
+  const faqs = [
+    {
+      q: "Apa yang saya dapatkan setelah membeli?",
+      a: "Anda mendapatkan Full Source Code lengkap (.zip / akses repository) beserta aset dan petunjuk cara build APK / deploy website.",
+    },
+    {
+      q: "Bagaimana cara klaim promo Take All 10K?",
+      a: "Klik tombol 'Ambil Promo 10K Sekarang' atau hubungi WhatsApp saya dengan pesan promo. Penawaran ini berlaku untuk 1 pembeli pertama.",
+    },
+    {
+      q: "Metode pembayaran apa saja yang diterima?",
+      a: "Pembayaran dapat dilakukan melalui QRIS (semua e-wallet dan m-banking), DANA, GoPay, OVO, atau transfer bank.",
+    },
+    {
+      q: "Berapa lama proses pengiriman source code?",
+      a: "Pengiriman instan via chat WhatsApp atau link Google Drive/GitHub segera setelah bukti transfer dikonfirmasi.",
+    },
+  ];
 
   return (
-    <section id="contact" className="py-16 md:py-24 px-4 max-w-6xl mx-auto">
-      <div className="relative rounded-2xl bg-gradient-to-br from-[#0c0e18] via-[#080910] to-[#050508] border border-white/10 p-8 sm:p-12 overflow-hidden shadow-2xl">
-        {/* Subtle grid backdrop */}
-        <div className="absolute inset-0 bg-grid-cyber opacity-20 pointer-events-none" />
-
-        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-          {/* Left info */}
+    <section id="faq" className="py-12 md:py-20 px-4 max-w-6xl mx-auto space-y-12">
+      {/* Contact Card */}
+      <div className="rounded-2xl bg-[#090b12] border border-white/10 p-8 sm:p-12 shadow-2xl">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
           <div className="lg:col-span-7 space-y-4">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 font-mono text-xs text-emerald-400">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-              <span>{PORTFOLIO_DATA.identity.statusBadge}</span>
+              <span>ONLINE & SIAP TRANSAKSI</span>
             </div>
 
-            <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight">
-              Let&apos;s engineer something unforgettable.
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+              Tertarik Beli Source Code?
             </h2>
 
             <p className="text-sm sm:text-base text-zinc-400 leading-relaxed max-w-xl">
-              Currently accepting selected architectural contracts, 3D WebGL consultancy, and high-performance frontend leadership. Reach out directly via email or your preferred platform.
+              Hubungi saya langsung via WhatsApp untuk pertanyaan teknis, demo tambahan, negosiasi, atau pembelian instan.
             </p>
 
-            {/* Email Copier Box */}
-            <div className="pt-2 flex flex-wrap items-center gap-3">
-              <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 font-mono text-xs text-zinc-300">
-                <Mail className="w-4 h-4 text-cyber-cyan" />
-                <span className="select-all">{PORTFOLIO_DATA.identity.email}</span>
+            <div className="pt-2 flex flex-wrap items-center gap-3 font-mono text-xs">
+              <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-zinc-300">
+                <Phone className="w-4 h-4 text-emerald-400" />
+                <span className="select-all">{PORTFOLIO_DATA.identity.phone}</span>
               </div>
 
               <button
-                onClick={handleCopyEmail}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-cyber-cyan text-black font-semibold font-mono text-xs hover:bg-cyber-cyan/90 transition-all active:scale-95 shadow-lg"
+                onClick={handleCopyPhone}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-zinc-300 hover:text-white hover:bg-white/10 transition-colors"
               >
                 {copied ? (
                   <>
-                    <Check className="w-4 h-4" />
-                    <span>Copied to Clipboard!</span>
+                    <Check className="w-4 h-4 text-emerald-400" />
+                    <span>Tersalin!</span>
                   </>
                 ) : (
                   <>
                     <Copy className="w-4 h-4" />
-                    <span>Copy Address</span>
+                    <span>Salin Nomor</span>
                   </>
                 )}
               </button>
-            </div>
-
-            {/* Social Grid */}
-            <div className="flex items-center gap-3 pt-4">
-              <a
-                href={PORTFOLIO_DATA.identity.github}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={playClickSound}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 font-mono text-xs text-zinc-300 hover:text-white hover:bg-white/10 transition-colors"
-              >
-                <GithubIcon className="w-4 h-4" />
-                <span>GitHub</span>
-                <ArrowUpRight className="w-3 h-3 text-zinc-500" />
-              </a>
 
               <a
-                href={PORTFOLIO_DATA.identity.linkedin}
+                href={PORTFOLIO_DATA.identity.whatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={playClickSound}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 font-mono text-xs text-zinc-300 hover:text-white hover:bg-white/10 transition-colors"
+                onClick={() => playClickSound()}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-500 text-black font-semibold hover:bg-emerald-400 transition-all shadow-md active:scale-95"
               >
-                <LinkedinIcon className="w-4 h-4" />
-                <span>LinkedIn</span>
-                <ArrowUpRight className="w-3 h-3 text-zinc-500" />
-              </a>
-
-              <a
-                href={PORTFOLIO_DATA.identity.twitter}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={playClickSound}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 font-mono text-xs text-zinc-300 hover:text-white hover:bg-white/10 transition-colors"
-              >
-                <TwitterXIcon className="w-4 h-4" />
-                <span>X (Twitter)</span>
-                <ArrowUpRight className="w-3 h-3 text-zinc-500" />
+                <MessageCircle className="w-4 h-4 fill-current" />
+                <span>Chat WhatsApp Langsung</span>
               </a>
             </div>
           </div>
 
-          {/* Right quick dispatch form */}
-          <div className="lg:col-span-5 bg-[#090b14]/90 p-6 rounded-xl border border-white/10 space-y-4">
-            <div className="flex items-center justify-between pb-2 border-b border-white/5 font-mono text-xs text-zinc-400">
-              <div className="flex items-center gap-2">
-                <MessageSquare className="w-3.5 h-3.5 text-cyber-cyan" />
-                <span>Direct Dispatch Console</span>
-              </div>
-              <span className="text-[10px] text-zinc-500">CLIENT PROTOCOL</span>
+          <div className="lg:col-span-5 p-6 rounded-xl bg-black/40 border border-white/10 space-y-3 font-mono text-xs">
+            <div className="flex items-center gap-2 text-white font-semibold pb-2 border-b border-white/10">
+              <ShieldCheck className="w-4 h-4 text-cyber-cyan" />
+              <span>Jaminan Kualitas Kode</span>
             </div>
-
-            <form onSubmit={handleSendQuickNote} className="space-y-3 font-mono text-xs">
-              <textarea
-                value={noteText}
-                onChange={(e) => setNoteText(e.target.value)}
-                rows={4}
-                placeholder="Write a brief project brief or note for Adnan..."
-                className="w-full bg-black/50 border border-white/10 rounded-lg p-3 text-white placeholder:text-zinc-600 outline-none focus:border-cyber-cyan/50 resize-none font-mono"
-              />
-
-              <button
-                type="submit"
-                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-white/10 border border-white/15 text-white font-medium hover:bg-white/20 transition-all active:scale-95"
-              >
-                {noteSent ? (
-                  <>
-                    <Check className="w-4 h-4 text-emerald-400" />
-                    <span>Opening Mail Client...</span>
-                  </>
-                ) : (
-                  <>
-                    <Send className="w-4 h-4 text-cyber-cyan" />
-                    <span>Dispatch via Email</span>
-                  </>
-                )}
-              </button>
-            </form>
+            <p className="text-zinc-400 leading-relaxed">
+              Setiap proyek telah diuji, memiliki struktur folder rapi tanpa file sampah, dan bebas dari error compile.
+            </p>
+            <div className="text-[11px] text-zinc-500 pt-1">
+              Developer: {PORTFOLIO_DATA.identity.fullName} • Indonesia
+            </div>
           </div>
+        </div>
+      </div>
+
+      {/* FAQ Section */}
+      <div className="space-y-6">
+        <div className="flex items-center gap-2 font-mono text-xs text-cyber-cyan">
+          <HelpCircle className="w-4 h-4" />
+          <span>PERTANYAAN UMUM (FAQ)</span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {faqs.map((faq, idx) => (
+            <div
+              key={idx}
+              className="p-5 rounded-xl bg-[#090b12] border border-white/10 space-y-2 hover:border-white/20 transition-colors"
+            >
+              <h4 className="text-sm font-bold text-white tracking-tight">{faq.q}</h4>
+              <p className="text-xs text-zinc-400 leading-relaxed font-normal">{faq.a}</p>
+            </div>
+          ))}
         </div>
       </div>
     </section>
