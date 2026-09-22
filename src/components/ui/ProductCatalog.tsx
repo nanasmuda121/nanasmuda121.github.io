@@ -32,10 +32,10 @@ export default function ProductCatalog() {
         <div>
           <div className="flex items-center gap-2.5 font-mono text-xs sm:text-sm md:text-base text-cyber-cyan mb-2">
             <span className="w-2 h-2 bg-cyber-cyan rounded-full animate-pulse" />
-            <span className="font-semibold tracking-wider">KATALOG SOURCE CODE SIAP PAKAI</span>
+            <span className="font-semibold tracking-wider">STASIUN SOURCE CODE &amp; ARTEFAK DIGITAL</span>
           </div>
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight">
-            Aplikasi Android &amp; Website
+            Aplikasi Android &amp; Web Eksplorasi
           </h2>
           <p className="font-mono text-xs sm:text-sm md:text-base text-zinc-400 mt-2">
             Harga tertera adalah untuk Full Source Code (clean architecture, modular &amp; siap build/deploy).
@@ -43,7 +43,7 @@ export default function ProductCatalog() {
         </div>
 
         {/* Filter Pills */}
-        <div className="flex items-center gap-2 bg-[#0a0b12] p-1.5 rounded-2xl border border-white/10 font-mono text-xs sm:text-sm md:text-base overflow-x-auto scrollbar-none">
+        <div className="flex items-center gap-2 bg-[#060814]/95 p-1.5 rounded-2xl border border-white/10 font-mono text-xs sm:text-sm md:text-base overflow-x-auto scrollbar-none shadow-xl">
           {filters.map((f) => (
             <button
               key={f.id}

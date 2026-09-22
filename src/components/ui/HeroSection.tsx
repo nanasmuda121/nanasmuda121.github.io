@@ -15,23 +15,23 @@ export default function HeroSection() {
       <div className="flex items-center justify-between font-mono text-xs sm:text-sm md:text-base text-zinc-400 border-b border-white/10 pb-3.5">
         <div className="flex items-center gap-2.5 sm:gap-3">
           <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="text-white font-semibold tracking-wider">{identity.statusBadge}</span>
+          <span className="text-white font-semibold tracking-wider">DEEP SPACE OBSERVATORY</span>
           <span className="text-zinc-600">•</span>
           <span className="text-zinc-300">WA: {identity.phone}</span>
         </div>
         <div className="hidden sm:flex items-center gap-3 text-xs sm:text-sm">
-          <span className="text-zinc-400">CLEAN ARCHITECTURE</span>
+          <span className="text-zinc-400">SIMULASI TATA SURYA &amp; ROKET</span>
           <span className="text-zinc-600">•</span>
           <span className="text-cyber-cyan font-semibold">FULL SOURCE CODE</span>
         </div>
       </div>
 
-      {/* Main Hero Header: Expansive, Bold & High-Impact Typography for PC & Mobile */}
+      {/* Main Hero Header: Expansive, Bold & High-Impact Space Typography for PC & Mobile */}
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 sm:gap-8">
         <div className="space-y-3 sm:space-y-4 max-w-4xl">
-          <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/5 border border-white/10 font-mono text-xs sm:text-sm md:text-base text-cyber-cyan">
-            <Sparkles className="w-4 h-4" />
-            <span className="font-medium">{identity.role}</span>
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyan-500/10 border border-cyber-cyan/30 font-mono text-xs sm:text-sm md:text-base text-cyber-cyan">
+            <Sparkles className="w-4 h-4 text-cyber-cyan" />
+            <span className="font-semibold tracking-wide">ORBITAL SOURCE CODE &amp; DIGITAL PRODUCTS</span>
           </div>
 
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight text-white leading-[1.05]">

@@ -15,17 +15,20 @@ export default function Navbar() {
         <a
           href="#"
           onClick={() => playClickSound()}
-          className="flex items-center gap-3.5 group"
+          className="flex items-center gap-3 group"
         >
-          <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/15 flex items-center justify-center font-mono font-bold text-sm text-white group-hover:border-cyber-cyan group-hover:text-cyber-cyan transition-all shadow">
+          <div className="w-10 h-10 rounded-xl bg-[#0b0f24] border border-cyber-cyan/30 flex items-center justify-center font-mono font-bold text-sm text-cyber-cyan group-hover:border-cyber-cyan group-hover:shadow-[0_0_15px_rgba(0,240,255,0.3)] transition-all shadow">
             {PORTFOLIO_DATA.identity.initials}
           </div>
           <div className="flex flex-col">
-            <span className="text-sm sm:text-base font-extrabold tracking-tight text-white group-hover:text-cyber-cyan transition-colors">
-              {PORTFOLIO_DATA.identity.fullName}
-            </span>
-            <span className="text-xs font-mono text-zinc-400">
-              Source Code &amp; Digital Products
+            <div className="flex items-center gap-1.5">
+              <span className="text-sm sm:text-base font-black tracking-tight text-white group-hover:text-cyber-cyan transition-colors">
+                {PORTFOLIO_DATA.identity.fullName}
+              </span>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse hidden sm:inline-block" />
+            </div>
+            <span className="text-[11px] font-mono text-zinc-400">
+              Orbital Lab • Digital Products
             </span>
           </div>
         </a>

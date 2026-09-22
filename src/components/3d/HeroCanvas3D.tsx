@@ -2,7 +2,14 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
-import { playClickSound, playWhooshSound, playBlipSound } from "@/utils/audio";
+import {
+  playClickSound,
+  playWhooshSound,
+  playBlipSound,
+  playExplosionSound,
+  playRocketLaunchSound,
+  playThrusterSound,
+} from "@/utils/audio";
 import {
   CELESTIAL_BODIES,
   SUN_DATA,
@@ -28,6 +35,14 @@ import {
   Layers,
   Globe,
   RotateCw,
+  Rocket,
+  Flame,
+  AlertTriangle,
+  ArrowUp,
+  ArrowDown,
+  ArrowLeft,
+  ArrowRight,
+  Zap,
 } from "lucide-react";
 
 interface PlanetNode {
@@ -53,6 +68,15 @@ export default function HeroCanvas3D() {
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<"ringkasan" | "fisik" | "orbit">("ringkasan");
 
+  // Controllable Rocket States
+  const [isRocketMode, setIsRocketMode] = useState<boolean>(false);
+  const [rocketTelemetry, setRocketTelemetry] = useState({
+    speedKmH: 28000,
+    distAU: 1.0,
+    boundaryWarning: false,
+  });
+  const [rocketBanner, setRocketBanner] = useState<string>("");
+
   // References for render loop to avoid tearing
   const isPlayingRef = useRef(isPlaying);
   isPlayingRef.current = isPlaying;
@@ -63,8 +87,22 @@ export default function HeroCanvas3D() {
   const selectedBodyRef = useRef<CelestialBody | null>(selectedBody);
   selectedBodyRef.current = selectedBody;
 
-  // External trigger for focusing from React buttons
+  const isRocketModeRef = useRef(isRocketMode);
+  isRocketModeRef.current = isRocketMode;
+
+  const rocketControlsRef = useRef({
+    turnLeft: false,
+    turnRight: false,
+    pitchUp: false,
+    pitchDown: false,
+    boost: false,
+    brake: false,
+  });
+
+  // External triggers
   const focusPlanetRef = useRef<(body: CelestialBody | null) => void>(() => {});
+  const launchRocketRef = useRef<() => void>(() => {});
+  const exitRocketRef = useRef<() => void>(() => {});
 
   // Fullscreen and Landscape toggle for Android & Mobile
   const toggleFullscreen = async () => {
@@ -441,6 +479,224 @@ export default function HeroCanvas3D() {
     const stars = new THREE.Points(starGeo, starMat);
     scene.add(stars);
 
+    // --- 5. Controllable Space Rocket & Flight System ---
+    const rocketGroup = new THREE.Group();
+    const rocketVisuals = new THREE.Group();
+    rocketGroup.add(rocketVisuals);
+
+    // Fuselage / body: sleek rocket cone + cylinder
+    const bodyGeo = new THREE.CylinderGeometry(0.04, 0.08, 0.38, isTouchDevice ? 6 : 10);
+    bodyGeo.rotateX(Math.PI / 2); // align along -Z
+    const bodyMat = new THREE.MeshLambertMaterial({ color: 0xf8fafc });
+    const rocketBody = new THREE.Mesh(bodyGeo, bodyMat);
+    rocketVisuals.add(rocketBody);
+
+    // Nose cone (cyber cyan tip)
+    const noseGeo = new THREE.ConeGeometry(0.04, 0.16, isTouchDevice ? 6 : 10);
+    noseGeo.rotateX(-Math.PI / 2);
+    noseGeo.translate(0, 0, -0.27);
+    const noseMat = new THREE.MeshLambertMaterial({ color: 0x00f0ff });
+    const rocketNose = new THREE.Mesh(noseGeo, noseMat);
+    rocketVisuals.add(rocketNose);
+
+    // Cockpit canopy visor
+    const cockpitGeo = new THREE.SphereGeometry(0.045, isTouchDevice ? 6 : 10, isTouchDevice ? 6 : 10);
+    cockpitGeo.translate(0, 0.04, -0.06);
+    const cockpitMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
+    const cockpitMesh = new THREE.Mesh(cockpitGeo, cockpitMat);
+    rocketVisuals.add(cockpitMesh);
+
+    // Swept fins (3 fins at 120° angles)
+    const finMat = new THREE.MeshLambertMaterial({ color: 0xe11d48 });
+    for (let i = 0; i < 3; i++) {
+      const finGeo = new THREE.BoxGeometry(0.015, 0.12, 0.14);
+      finGeo.translate(0, 0.07, 0.12);
+      const finMesh = new THREE.Mesh(finGeo, finMat);
+      finMesh.rotation.z = (i * Math.PI * 2) / 3;
+      rocketVisuals.add(finMesh);
+    }
+
+    // Engine nozzle
+    const nozzleGeo = new THREE.CylinderGeometry(0.05, 0.04, 0.06, isTouchDevice ? 6 : 8);
+    nozzleGeo.rotateX(Math.PI / 2);
+    nozzleGeo.translate(0, 0, 0.22);
+    const nozzleMat = new THREE.MeshLambertMaterial({ color: 0x334155 });
+    const nozzleMesh = new THREE.Mesh(nozzleGeo, nozzleMat);
+    rocketVisuals.add(nozzleMesh);
+
+    // Thruster exhaust flame
+    const flameGeo = new THREE.ConeGeometry(0.045, 0.26, isTouchDevice ? 6 : 8);
+    flameGeo.rotateX(Math.PI / 2);
+    flameGeo.translate(0, 0, 0.35);
+    const flameMat = new THREE.MeshBasicMaterial({
+      color: 0xff7700,
+      transparent: true,
+      opacity: 0.9,
+    });
+    const flameMesh = new THREE.Mesh(flameGeo, flameMat);
+    rocketVisuals.add(flameMesh);
+
+    rocketGroup.position.set(0, 0.6, 5.0);
+    rocketGroup.rotation.set(0, Math.PI, 0);
+    rocketGroup.visible = false;
+    scene.add(rocketGroup);
+
+    // --- 6. 3D Explosion Particle System & Shockwave ---
+    const EXPLOSION_PARTICLES = isTouchDevice ? 36 : 60;
+    const expGeo = new THREE.BufferGeometry();
+    const expPositions = new Float32Array(EXPLOSION_PARTICLES * 3);
+    const expVelocities: THREE.Vector3[] = [];
+    const expColors = new Float32Array(EXPLOSION_PARTICLES * 3);
+
+    const colorPalette = [
+      new THREE.Color(0xff3b30),
+      new THREE.Color(0xff9500),
+      new THREE.Color(0xffcc00),
+      new THREE.Color(0x00f0ff),
+      new THREE.Color(0xffffff),
+    ];
+
+    for (let i = 0; i < EXPLOSION_PARTICLES; i++) {
+      expVelocities.push(new THREE.Vector3());
+      const c = colorPalette[i % colorPalette.length];
+      expColors[i * 3] = c.r;
+      expColors[i * 3 + 1] = c.g;
+      expColors[i * 3 + 2] = c.b;
+    }
+
+    expGeo.setAttribute("position", new THREE.BufferAttribute(expPositions, 3));
+    expGeo.setAttribute("color", new THREE.BufferAttribute(expColors, 3));
+
+    const expMat = new THREE.PointsMaterial({
+      size: isTouchDevice ? 0.12 : 0.16,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0,
+    });
+    const explosionPoints = new THREE.Points(expGeo, expMat);
+    scene.add(explosionPoints);
+
+    // Shockwave ring
+    const shockwaveGeo = new THREE.RingGeometry(0.04, 0.15, isTouchDevice ? 16 : 24);
+    const shockwaveMat = new THREE.MeshBasicMaterial({
+      color: 0xffaa00,
+      transparent: true,
+      opacity: 0,
+      side: THREE.DoubleSide,
+    });
+    const shockwaveMesh = new THREE.Mesh(shockwaveGeo, shockwaveMat);
+    shockwaveMesh.rotation.x = Math.PI / 2;
+    scene.add(shockwaveMesh);
+
+    let isExploding = false;
+    let explosionProgress = 0;
+    let cameraShake = 0;
+    let rocketSpeed = 0.04;
+
+    const triggerExplosion = (reason: string, hitPos: THREE.Vector3) => {
+      if (isExploding) return;
+      isExploding = true;
+      explosionProgress = 0;
+      cameraShake = 0.32;
+      rocketGroup.visible = false;
+      playExplosionSound();
+
+      explosionPoints.position.copy(hitPos);
+      shockwaveMesh.position.copy(hitPos);
+      expMat.opacity = 1.0;
+      shockwaveMat.opacity = 0.85;
+      shockwaveMesh.scale.set(1, 1, 1);
+
+      for (let i = 0; i < EXPLOSION_PARTICLES; i++) {
+        const spd = 0.06 + Math.random() * 0.14;
+        const phi = Math.random() * Math.PI * 2;
+        const costheta = Math.random() * 2 - 1;
+        const theta = Math.acos(costheta);
+        expVelocities[i].set(
+          Math.sin(theta) * Math.cos(phi) * spd,
+          Math.sin(theta) * Math.sin(phi) * spd,
+          Math.cos(theta) * spd
+        );
+        expPositions[i * 3] = 0;
+        expPositions[i * 3 + 1] = 0;
+        expPositions[i * 3 + 2] = 0;
+      }
+      expGeo.attributes.position.needsUpdate = true;
+
+      setRocketBanner(`💥 MELEDAK! ${reason}`);
+    };
+
+    const respawnRocket = () => {
+      isExploding = false;
+      explosionProgress = 0;
+      cameraShake = 0;
+      expMat.opacity = 0;
+      shockwaveMat.opacity = 0;
+
+      // Spawn near Earth's orbital distance facing inward toward Sun
+      rocketGroup.position.set(0, 0.6, 5.0);
+      rocketGroup.rotation.set(0, Math.PI, 0);
+      rocketVisuals.rotation.set(0, 0, 0);
+      rocketSpeed = 0.04;
+      rocketGroup.visible = true;
+
+      playRocketLaunchSound();
+      setRocketBanner("🚀 Roket Baru Diluncurkan! Siap dikendalikan.");
+      setTimeout(() => {
+        setRocketBanner("");
+      }, 3000);
+    };
+
+    launchRocketRef.current = () => {
+      setSelectedBody(null);
+      setShowDetailCard(false);
+      setIsRocketMode(true);
+      isRocketModeRef.current = true;
+      respawnRocket();
+    };
+
+    exitRocketRef.current = () => {
+      setIsRocketMode(false);
+      isRocketModeRef.current = false;
+      rocketGroup.visible = false;
+      isExploding = false;
+      expMat.opacity = 0;
+      shockwaveMat.opacity = 0;
+      setRocketBanner("");
+      playBlipSound(440, 0.06);
+    };
+
+    // Keyboard controls for flight
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (!isRocketModeRef.current) return;
+      const key = e.code;
+      if (key === "KeyA" || key === "ArrowLeft") rocketControlsRef.current.turnLeft = true;
+      if (key === "KeyD" || key === "ArrowRight") rocketControlsRef.current.turnRight = true;
+      if (key === "KeyW" || key === "ArrowUp") rocketControlsRef.current.pitchDown = true;
+      if (key === "KeyS" || key === "ArrowDown") rocketControlsRef.current.pitchUp = true;
+      if (key === "Space") {
+        e.preventDefault();
+        rocketControlsRef.current.boost = true;
+        playThrusterSound();
+      }
+      if (key === "KeyB" || key === "KeyX") rocketControlsRef.current.brake = true;
+      if (key === "Escape") exitRocketRef.current();
+    };
+
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (!isRocketModeRef.current) return;
+      const key = e.code;
+      if (key === "KeyA" || key === "ArrowLeft") rocketControlsRef.current.turnLeft = false;
+      if (key === "KeyD" || key === "ArrowRight") rocketControlsRef.current.turnRight = false;
+      if (key === "KeyW" || key === "ArrowUp") rocketControlsRef.current.pitchDown = false;
+      if (key === "KeyS" || key === "ArrowDown") rocketControlsRef.current.pitchUp = false;
+      if (key === "Space") rocketControlsRef.current.boost = false;
+      if (key === "KeyB" || key === "KeyX") rocketControlsRef.current.brake = false;
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keyup", onKeyUp);
+
     // --- Interaction Physics ---
     let targetTiltX = 0.45;
     let targetTiltY = 0;
@@ -452,6 +708,7 @@ export default function HeroCanvas3D() {
     const pointer = new THREE.Vector2();
 
     const handleFocusPlanet = (body: CelestialBody | null) => {
+      if (isRocketModeRef.current) return;
       setSelectedBody(body);
       setShowDetailCard(body !== null);
       if (body) {
@@ -463,6 +720,7 @@ export default function HeroCanvas3D() {
     focusPlanetRef.current = handleFocusPlanet;
 
     const onPointerDown = (e: MouseEvent) => {
+      if (isRocketModeRef.current) return;
       isMouseDown = true;
       setIsDragging(true);
       pointerDownPos = { x: e.clientX, y: e.clientY };
@@ -470,7 +728,7 @@ export default function HeroCanvas3D() {
     };
 
     const onPointerMove = (e: MouseEvent) => {
-      if (isMouseDown && !selectedBodyRef.current) {
+      if (isMouseDown && !selectedBodyRef.current && !isRocketModeRef.current) {
         const deltaX = e.clientX - prevMousePos.x;
         const deltaY = e.clientY - prevMousePos.y;
 
@@ -483,6 +741,7 @@ export default function HeroCanvas3D() {
     };
 
     const onPointerUp = (e: MouseEvent) => {
+      if (isRocketModeRef.current) return;
       const movedDist = Math.hypot(e.clientX - pointerDownPos.x, e.clientY - pointerDownPos.y);
       isMouseDown = false;
       setIsDragging(false);
@@ -505,9 +764,27 @@ export default function HeroCanvas3D() {
       }
     };
 
+    // Zoom control: Interactive wheel zoom and mobile pinch-to-zoom
+    let overviewZoom = 1.0;
+    let pinchStartDist = 0;
+    let pinchStartZoom = 1.0;
+
+    const onWheel = (e: WheelEvent) => {
+      if (isRocketModeRef.current || selectedBodyRef.current) return;
+      e.preventDefault();
+      const zoomDelta = e.deltaY * 0.0012;
+      overviewZoom = Math.max(0.42, Math.min(1.85, overviewZoom + zoomDelta));
+    };
+
     // Mobile Touch
     const onTouchStart = (e: TouchEvent) => {
-      if (e.touches.length > 0) {
+      if (isRocketModeRef.current) return;
+      if (e.touches.length === 2) {
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        pinchStartDist = Math.hypot(dx, dy);
+        pinchStartZoom = overviewZoom;
+      } else if (e.touches.length === 1) {
         isMouseDown = true;
         setIsDragging(true);
         pointerDownPos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
@@ -516,7 +793,15 @@ export default function HeroCanvas3D() {
     };
 
     const onTouchMove = (e: TouchEvent) => {
-      if (isMouseDown && e.touches.length > 0 && !selectedBodyRef.current) {
+      if (e.touches.length === 2 && !selectedBodyRef.current && !isRocketModeRef.current) {
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        const currentDist = Math.hypot(dx, dy);
+        if (pinchStartDist > 0) {
+          const ratio = currentDist / pinchStartDist;
+          overviewZoom = Math.max(0.42, Math.min(1.85, pinchStartZoom / ratio));
+        }
+      } else if (isMouseDown && e.touches.length === 1 && !selectedBodyRef.current && !isRocketModeRef.current) {
         const deltaX = e.touches[0].clientX - prevMousePos.x;
         const deltaY = e.touches[0].clientY - prevMousePos.y;
 
@@ -529,6 +814,7 @@ export default function HeroCanvas3D() {
     };
 
     const onTouchEnd = (e: TouchEvent) => {
+      if (isRocketModeRef.current) return;
       if (e.changedTouches.length > 0) {
         const t = e.changedTouches[0];
         const movedDist = Math.hypot(t.clientX - pointerDownPos.x, t.clientY - pointerDownPos.y);
@@ -557,6 +843,7 @@ export default function HeroCanvas3D() {
     canvasHolder.addEventListener("mousedown", onPointerDown);
     window.addEventListener("mousemove", onPointerMove);
     window.addEventListener("mouseup", onPointerUp);
+    canvasHolder.addEventListener("wheel", onWheel, { passive: false });
 
     canvasHolder.addEventListener("touchstart", onTouchStart, { passive: true });
     window.addEventListener("touchmove", onTouchMove, { passive: true });
@@ -633,24 +920,14 @@ export default function HeroCanvas3D() {
       const speedFactor = orbitSpeedRef.current;
 
       // Dynamic sprite visibility & scaling for optimal readability
-      if (activeSelected) {
-        // Focused mode: show only the selected body's label, hide distant labels to prevent clutter
-        sunSprite.visible = activeSelected.id === "matahari";
-        if (sunSprite.visible) sunSprite.scale.set(1.5, 0.38, 1);
-
+      // When inspecting a planet, in rocket flight, or zoomed in close, all labels disappear
+      const isZoomedIn = overviewZoom < 0.78;
+      if (activeSelected || isRocketModeRef.current || isZoomedIn) {
+        sunSprite.visible = false;
         planetNodes.forEach((node) => {
-          const isThisSelected = node.body.id === activeSelected.id;
-          node.sprite.visible = isThisSelected;
-          if (isThisSelected) {
-            node.sprite.scale.set(1.4, 0.35, 1);
-          }
-
+          node.sprite.visible = false;
           if (node.moonSprite) {
-            const isMoonOrEarth = activeSelected.id === "bulan" || activeSelected.id === "bumi";
-            node.moonSprite.visible = isMoonOrEarth;
-            if (isMoonOrEarth) {
-              node.moonSprite.scale.set(1.2, 0.30, 1);
-            }
+            node.moonSprite.visible = false;
           }
         });
       } else {
@@ -686,11 +963,126 @@ export default function HeroCanvas3D() {
         });
       }
 
-      const currentId = activeSelected?.id ?? null;
-      const isSelectionChanged = currentId !== prevSelectedId;
+      // ==========================================
+      // MODE 1: CONTROLLABLE ROCKET FLIGHT & COMBAT
+      // ==========================================
+      if (isRocketModeRef.current) {
+        if (isExploding) {
+          explosionProgress += 0.024; // ~40 frames
+          cameraShake *= 0.88;
 
-      // Camera Tracking Logic
-      if (activeSelected) {
+          for (let i = 0; i < EXPLOSION_PARTICLES; i++) {
+            expPositions[i * 3] += expVelocities[i].x;
+            expPositions[i * 3 + 1] += expVelocities[i].y;
+            expPositions[i * 3 + 2] += expVelocities[i].z;
+          }
+          expGeo.attributes.position.needsUpdate = true;
+          expMat.opacity = Math.max(0, 1.0 - explosionProgress);
+
+          const swScale = 1.0 + explosionProgress * 10.0;
+          shockwaveMesh.scale.set(swScale, swScale, swScale);
+          shockwaveMat.opacity = Math.max(0, (1.0 - explosionProgress) * 0.7);
+
+          if (explosionProgress >= 1.0) {
+            respawnRocket();
+          }
+        } else {
+          // Flight steering with realistic banking roll
+          const ctrl = rocketControlsRef.current;
+          const turnSpeed = 0.045;
+          let targetBank = 0;
+
+          if (ctrl.turnLeft) {
+            rocketGroup.rotateOnAxis(new THREE.Vector3(0, 1, 0), turnSpeed);
+            targetBank = 0.45;
+          } else if (ctrl.turnRight) {
+            rocketGroup.rotateOnAxis(new THREE.Vector3(0, 1, 0), -turnSpeed);
+            targetBank = -0.45;
+          }
+
+          if (ctrl.pitchUp) {
+            rocketGroup.rotateOnAxis(new THREE.Vector3(1, 0, 0), turnSpeed * 0.75);
+          }
+          if (ctrl.pitchDown) {
+            rocketGroup.rotateOnAxis(new THREE.Vector3(1, 0, 0), -turnSpeed * 0.75);
+          }
+
+          // Smoothly bank visual mesh without gimbal lock
+          rocketVisuals.rotation.z += (targetBank - rocketVisuals.rotation.z) * 0.15;
+
+          const targetSpeed = ctrl.boost ? 0.11 : ctrl.brake ? 0.015 : 0.045;
+          rocketSpeed += (targetSpeed - rocketSpeed) * 0.1;
+
+          // Forward movement (-Z local forward)
+          const forwardVec = new THREE.Vector3(0, 0, -1).applyQuaternion(rocketGroup.quaternion);
+          rocketGroup.position.addScaledVector(forwardVec, rocketSpeed);
+
+          // Animated thruster flame
+          const flameScale = ctrl.boost ? 1.8 + Math.random() * 0.4 : 1.0 + Math.random() * 0.2;
+          flameMesh.scale.set(1, 1, flameScale);
+          flameMat.color.setHex(ctrl.boost ? 0x00f0ff : 0xff7700);
+
+          // Telemetry calculation
+          const rPos = rocketGroup.position;
+          const distSun = rPos.length();
+          const speedKmH = Math.round(rocketSpeed * 750000);
+          const isNearBoundary = distSun > 14.5;
+          setRocketTelemetry({
+            speedKmH,
+            distAU: Number(distSun.toFixed(1)),
+            boundaryWarning: isNearBoundary,
+          });
+
+          // --- COLLISION CHECKS ---
+          // 1. Sun collision
+          if (distSun < SUN_DATA.size + 0.14) {
+            triggerExplosion("Menabrak Matahari!", rPos.clone());
+          }
+          // 2. Out of bounds (Kuiper belt boundary)
+          else if (distSun > 17.5) {
+            triggerExplosion("Terlalu Jauh dari Tata Surya (Keluar Batas)!", rPos.clone());
+          }
+          // 3. Planet and Moon collisions
+          else {
+            const tempWorld = new THREE.Vector3();
+            for (const node of planetNodes) {
+              node.mesh.getWorldPosition(tempWorld);
+              const distToPlanet = rPos.distanceTo(tempWorld);
+              if (distToPlanet < node.body.size + 0.14) {
+                triggerExplosion(`Menabrak Planet ${node.body.name}!`, rPos.clone());
+                break;
+              }
+
+              if (node.moonMesh) {
+                node.moonMesh.getWorldPosition(tempWorld);
+                const distToMoon = rPos.distanceTo(tempWorld);
+                if (distToMoon < MOON_DATA.size + 0.10) {
+                  triggerExplosion("Menabrak Bulan (Luna)!", rPos.clone());
+                  break;
+                }
+              }
+            }
+          }
+        }
+
+        // Smooth Rocket Chase Camera
+        const chaseOffset = new THREE.Vector3(0, 0.42, 1.4).applyQuaternion(rocketGroup.quaternion);
+        desiredCameraPos.copy(rocketGroup.position).add(chaseOffset);
+
+        if (cameraShake > 0.001) {
+          desiredCameraPos.x += (Math.random() - 0.5) * cameraShake;
+          desiredCameraPos.y += (Math.random() - 0.5) * cameraShake;
+          desiredCameraPos.z += (Math.random() - 0.5) * cameraShake;
+        }
+
+        camera.position.lerp(desiredCameraPos, 0.15);
+        const lookAhead = new THREE.Vector3(0, 0.05, -2.2).applyQuaternion(rocketGroup.quaternion);
+        camera.lookAt(rocketGroup.position.clone().add(lookAhead));
+
+      // ==========================================
+      // MODE 2: PLANET FOCUS & ORBIT TRACKING
+      // ==========================================
+      } else if (activeSelected) {
         // Smoothly ease solarGroup back to baseline orientation so tracking has standard celestial view
         solarGroup.rotation.x += (0.45 - solarGroup.rotation.x) * 0.05;
         solarGroup.rotation.y += (0 - solarGroup.rotation.y) * 0.05;
@@ -764,7 +1156,8 @@ export default function HeroCanvas3D() {
           );
 
           // When selection changes, smoothly bridge from current camera position
-          if (isSelectionChanged) {
+          const currentId = activeSelected.id;
+          if (currentId !== prevSelectedId) {
             camOffset.copy(camera.position).sub(desiredCameraPos);
             lookOffset.copy(currentLookAt).sub(lookTarget);
             prevSelectedId = currentId;
@@ -778,12 +1171,22 @@ export default function HeroCanvas3D() {
           currentLookAt.copy(lookTarget).add(lookOffset);
           camera.lookAt(currentLookAt);
         }
+
+      // ==========================================
+      // MODE 3: GLOBAL SOLAR SYSTEM OVERVIEW
+      // ==========================================
       } else {
-        // Global Overview Mode: Interactive 360° Drag
+        // Global Overview Mode: Interactive 360° Drag & Dynamic Zoom
+        overviewCamPos.set(
+          0,
+          (isTouchDevice ? 7.8 : 6.8) * overviewZoom,
+          (isTouchDevice ? 12.8 : 10.8) * overviewZoom
+        );
+
         solarGroup.rotation.x += (targetTiltX - solarGroup.rotation.x) * 0.08;
         solarGroup.rotation.y += (targetTiltY - solarGroup.rotation.y) * 0.08;
 
-        if (isSelectionChanged) {
+        if (prevSelectedId !== null) {
           camOffset.copy(camera.position).sub(overviewCamPos);
           lookOffset.copy(currentLookAt).sub(overviewLookAt);
           prevSelectedId = null;
@@ -804,9 +1207,12 @@ export default function HeroCanvas3D() {
 
     return () => {
       observer.disconnect();
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
       canvasHolder.removeEventListener("mousedown", onPointerDown);
       window.removeEventListener("mousemove", onPointerMove);
       window.removeEventListener("mouseup", onPointerUp);
+      canvasHolder.removeEventListener("wheel", onWheel);
 
       canvasHolder.removeEventListener("touchstart", onTouchStart);
       window.removeEventListener("touchmove", onTouchMove);
@@ -832,6 +1238,9 @@ export default function HeroCanvas3D() {
   ];
 
   const handleSelectBody = (body: CelestialBody | null) => {
+    if (isRocketModeRef.current) {
+      exitRocketRef.current();
+    }
     focusPlanetRef.current(body);
   };
 
@@ -879,8 +1288,23 @@ export default function HeroCanvas3D() {
         <span className="text-cyber-cyan font-semibold hidden sm:inline">Tracking</span>
       </div>
 
-      {/* Top Right Controls: Fullscreen Landscape (Mobile Only) + Reset */}
+      {/* Top Right Controls: Fullscreen Landscape (Mobile Only) + Rocket + Reset */}
       <div className="absolute top-2.5 right-2.5 sm:top-3.5 sm:right-3.5 z-20 flex items-center gap-1.5">
+        {/* Launch Rocket Trigger in Top Header */}
+        {!selectedBody && !isRocketMode && (
+          <button
+            onClick={() => {
+              playClickSound();
+              launchRocketRef.current();
+            }}
+            className="flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl bg-gradient-to-r from-cyan-500/20 to-blue-600/20 hover:from-cyan-500/35 hover:to-blue-600/35 text-cyber-cyan border border-cyber-cyan/40 font-mono text-[10px] sm:text-xs font-bold transition-all shadow-md active:scale-95"
+            title="Luncurkan dan kendalikan roket penjelajah antariksa!"
+          >
+            <Rocket className="w-3.5 h-3.5 text-cyber-cyan animate-pulse" />
+            <span>Mode Roket</span>
+          </button>
+        )}
+
         {/* Fullscreen Landscape Toggle - Exclusively for Android / Mobile, HIDDEN on PC */}
         <button
           onClick={toggleFullscreen}
@@ -903,7 +1327,7 @@ export default function HeroCanvas3D() {
         </button>
 
         {/* Reset / Overview Button (when a planet is focused) */}
-        {selectedBody && (
+        {selectedBody && !isRocketMode && (
           <button
             onClick={() => handleSelectBody(null)}
             className="flex items-center gap-1 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl bg-[#070912]/90 hover:bg-white/20 text-white border border-white/15 font-mono text-[10px] sm:text-xs font-semibold transition-all active:scale-95 shadow-md"
@@ -1181,72 +1605,299 @@ export default function HeroCanvas3D() {
         </div>
       )}
 
-      {/* Bottom Floating Control Bar - Compact, sleek, and unobtrusive */}
-      <div className="absolute bottom-2 left-2 right-2 sm:bottom-3 sm:left-3 sm:right-3 z-20 flex items-center justify-between gap-1.5 sm:gap-2 pointer-events-auto">
-        {/* Planet Quick Selector Pills */}
-        <div className="flex items-center gap-1 overflow-x-auto py-1 px-1.5 sm:py-1.5 sm:px-2 bg-[#070912]/90 rounded-lg sm:rounded-xl border border-white/12 font-mono text-[10px] sm:text-[11px] max-w-[70%] sm:max-w-[78%] scrollbar-none shadow-lg">
-          {allBodies.map((body) => {
-            const isSelected = selectedBody?.id === body.id;
-            return (
+      {/* ========================================================= */}
+      {/* ROCKET FLIGHT HUD OVERLAY (When isRocketMode is Active) */}
+      {/* ========================================================= */}
+      {isRocketMode && (
+        <div className="absolute inset-0 pointer-events-none z-30 flex flex-col justify-between p-2.5 sm:p-4 select-none">
+          {/* Top Flight Telemetry Bar */}
+          <div className="flex items-center justify-between gap-2 pointer-events-auto flex-wrap">
+            {/* Left: Rocket telemetry (Speed + Solar AU distance) */}
+            <div className="flex items-center gap-2 sm:gap-3 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-[#060814]/90 border border-cyber-cyan/35 backdrop-blur-md shadow-xl font-mono text-[10px] sm:text-xs text-white">
+              <div className="flex items-center gap-1.5 text-cyber-cyan font-bold">
+                <Rocket className="w-3.5 h-3.5 animate-pulse" />
+                <span className="hidden sm:inline">ROKET:</span>
+              </div>
+              <div className="flex items-center gap-1 font-semibold text-emerald-400">
+                <Zap className="w-3 h-3" />
+                <span>{rocketTelemetry.speedKmH.toLocaleString()} km/h</span>
+              </div>
+              <span className="text-zinc-600">•</span>
+              <div className="text-amber-300 font-semibold">
+                ☀️ {rocketTelemetry.distAU} AU
+              </div>
+            </div>
+
+            {/* Center: Boundary Warning (if near outer Kuiper belt) */}
+            {rocketTelemetry.boundaryWarning && (
+              <div className="animate-pulse px-3 py-1 sm:px-4 sm:py-1.5 rounded-xl bg-red-950/90 border border-red-500/60 text-red-300 font-mono text-[10px] sm:text-xs font-bold flex items-center gap-1.5 shadow-lg shadow-red-900/40">
+                <AlertTriangle className="w-3.5 h-3.5 text-red-400 animate-bounce" />
+                <span>MENDEKATI BATAS TATA SURYA!</span>
+              </div>
+            )}
+
+            {/* Right: Exit Rocket Mode Button */}
+            <button
+              onClick={() => exitRocketRef.current()}
+              className="flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-red-500/20 hover:bg-red-500/35 text-red-200 border border-red-500/40 font-mono text-[10px] sm:text-xs font-bold transition-all active:scale-95 shadow-lg"
+              title="Keluar dari mode roket (Kembali ke Tata Surya)"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Keluar Mode</span>
+            </button>
+          </div>
+
+          {/* Center Banner Alert (Explosion or Launch notification) */}
+          {rocketBanner && (
+            <div
+              className={`self-center animate-in fade-in zoom-in duration-200 px-4 py-2 sm:px-6 sm:py-2.5 rounded-2xl font-mono text-xs sm:text-sm font-bold shadow-2xl backdrop-blur-xl border flex items-center gap-2 max-w-[90%] text-center pointer-events-auto ${
+                rocketBanner.includes("MELEDAK") || rocketBanner.includes("Menabrak") || rocketBanner.includes("Batas")
+                  ? "bg-red-950/90 border-red-500/60 text-red-200 shadow-red-900/50"
+                  : "bg-[#070918]/95 border-cyber-cyan/50 text-cyber-cyan shadow-cyan-950/50"
+              }`}
+            >
+              {rocketBanner.includes("MELEDAK") || rocketBanner.includes("Menabrak") || rocketBanner.includes("Batas") ? (
+                <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0 animate-bounce" />
+              ) : (
+                <Rocket className="w-4 h-4 text-cyber-cyan flex-shrink-0 animate-pulse" />
+              )}
+              <span>{rocketBanner}</span>
+            </div>
+          )}
+
+          {/* Bottom Flight Controls: Desktop Guide & Touch Virtual D-Pad / Thrusters */}
+          <div className="w-full flex items-end justify-between pointer-events-auto">
+            {/* Left: Mobile / Touch Virtual Directional D-Pad */}
+            <div className="flex flex-col items-center gap-1 p-2 rounded-2xl bg-[#060814]/80 backdrop-blur-md border border-white/10 shadow-xl select-none touch-none">
+              {/* Pitch Down (W / Up arrow) */}
               <button
-                key={body.id}
-                onClick={() => {
-                  if (isSelected) {
-                    handleSelectBody(null);
-                  } else {
-                    handleSelectBody(body);
-                  }
+                onMouseDown={() => (rocketControlsRef.current.pitchDown = true)}
+                onMouseUp={() => (rocketControlsRef.current.pitchDown = false)}
+                onMouseLeave={() => (rocketControlsRef.current.pitchDown = false)}
+                onTouchStart={(e) => {
+                  e.preventDefault();
+                  rocketControlsRef.current.pitchDown = true;
                 }}
-                className={`px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md sm:rounded-lg whitespace-nowrap transition-all flex items-center gap-1 text-[10px] sm:text-[11px] ${
-                  isSelected
-                    ? "bg-white text-black font-bold shadow-sm"
-                    : "text-zinc-400 hover:text-white hover:bg-white/10"
-                }`}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  rocketControlsRef.current.pitchDown = false;
+                }}
+                className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white/10 hover:bg-white/20 active:bg-cyber-cyan/30 text-white flex items-center justify-center border border-white/15 active:scale-95 transition-all shadow-md"
+                title="Pitch Bawah (Turun)"
               >
-                <span
-                  className="w-1.5 h-1.5 rounded-full inline-block flex-shrink-0"
-                  style={{
-                    backgroundColor: `#${body.fallbackColor.toString(16).padStart(6, "0")}`,
-                  }}
-                />
-                <span className="font-medium">{body.name}</span>
+                <ArrowUp className="w-5 h-5" />
               </button>
-            );
-          })}
-        </div>
 
-        {/* Orbit Speed & Play/Pause Controls */}
-        <div className="flex items-center gap-1 sm:gap-1.5 flex-shrink-0">
-          {/* Speed Toggle (1x / 2x / 0.5x) */}
+              {/* Horizontal Row: Turn Left & Turn Right */}
+              <div className="flex items-center gap-2">
+                <button
+                  onMouseDown={() => (rocketControlsRef.current.turnLeft = true)}
+                  onMouseUp={() => (rocketControlsRef.current.turnLeft = false)}
+                  onMouseLeave={() => (rocketControlsRef.current.turnLeft = false)}
+                  onTouchStart={(e) => {
+                    e.preventDefault();
+                    rocketControlsRef.current.turnLeft = true;
+                  }}
+                  onTouchEnd={(e) => {
+                    e.preventDefault();
+                    rocketControlsRef.current.turnLeft = false;
+                  }}
+                  className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white/10 hover:bg-white/20 active:bg-cyber-cyan/30 text-white flex items-center justify-center border border-white/15 active:scale-95 transition-all shadow-md"
+                  title="Belok Kiri"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                </button>
+
+                <div className="w-5 h-5 rounded-full border border-white/10 flex items-center justify-center">
+                  <div className="w-1.5 h-1.5 rounded-full bg-cyber-cyan" />
+                </div>
+
+                <button
+                  onMouseDown={() => (rocketControlsRef.current.turnRight = true)}
+                  onMouseUp={() => (rocketControlsRef.current.turnRight = false)}
+                  onMouseLeave={() => (rocketControlsRef.current.turnRight = false)}
+                  onTouchStart={(e) => {
+                    e.preventDefault();
+                    rocketControlsRef.current.turnRight = true;
+                  }}
+                  onTouchEnd={(e) => {
+                    e.preventDefault();
+                    rocketControlsRef.current.turnRight = false;
+                  }}
+                  className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white/10 hover:bg-white/20 active:bg-cyber-cyan/30 text-white flex items-center justify-center border border-white/15 active:scale-95 transition-all shadow-md"
+                  title="Belok Kanan"
+                >
+                  <ArrowRight className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Pitch Up (S / Down arrow) */}
+              <button
+                onMouseDown={() => (rocketControlsRef.current.pitchUp = true)}
+                onMouseUp={() => (rocketControlsRef.current.pitchUp = false)}
+                onMouseLeave={() => (rocketControlsRef.current.pitchUp = false)}
+                onTouchStart={(e) => {
+                  e.preventDefault();
+                  rocketControlsRef.current.pitchUp = true;
+                }}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  rocketControlsRef.current.pitchUp = false;
+                }}
+                className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white/10 hover:bg-white/20 active:bg-cyber-cyan/30 text-white flex items-center justify-center border border-white/15 active:scale-95 transition-all shadow-md"
+                title="Pitch Atas (Naik)"
+              >
+                <ArrowDown className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Center: Desktop Keyboard Help Guide */}
+            <div className="hidden md:flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-[#060814]/85 border border-white/15 backdrop-blur-md font-mono text-[11px] text-zinc-300 shadow-xl">
+              <span className="text-cyber-cyan font-bold">[W/S]</span>
+              <span>Pitch</span>
+              <span className="text-zinc-600">•</span>
+              <span className="text-cyber-cyan font-bold">[A/D]</span>
+              <span>Belok</span>
+              <span className="text-zinc-600">•</span>
+              <span className="text-cyber-cyan font-bold">[SPASI]</span>
+              <span>Turbo Boost</span>
+              <span className="text-zinc-600">•</span>
+              <span className="text-amber-400 font-bold">[B]</span>
+              <span>Rem</span>
+            </div>
+
+            {/* Right: Boost & Brake Action Buttons */}
+            <div className="flex flex-col gap-2 p-2 rounded-2xl bg-[#060814]/80 backdrop-blur-md border border-white/10 shadow-xl select-none touch-none">
+              {/* Turbo Boost Button */}
+              <button
+                onMouseDown={() => {
+                  rocketControlsRef.current.boost = true;
+                  playThrusterSound();
+                }}
+                onMouseUp={() => (rocketControlsRef.current.boost = false)}
+                onMouseLeave={() => (rocketControlsRef.current.boost = false)}
+                onTouchStart={(e) => {
+                  e.preventDefault();
+                  rocketControlsRef.current.boost = true;
+                  playThrusterSound();
+                }}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  rocketControlsRef.current.boost = false;
+                }}
+                className="px-4 py-2.5 sm:px-5 sm:py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-black font-black font-mono text-xs sm:text-sm flex items-center justify-center gap-2 active:scale-90 transition-all shadow-lg shadow-cyan-500/30 active:from-cyan-400 active:to-blue-500"
+                title="Tekan untuk Akselerasi Penuh"
+              >
+                <Flame className="w-4 h-4 fill-current text-white animate-pulse" />
+                <span className="text-white font-bold">BOOST</span>
+              </button>
+
+              {/* Air Brake Button */}
+              <button
+                onMouseDown={() => (rocketControlsRef.current.brake = true)}
+                onMouseUp={() => (rocketControlsRef.current.brake = false)}
+                onMouseLeave={() => (rocketControlsRef.current.brake = false)}
+                onTouchStart={(e) => {
+                  e.preventDefault();
+                  rocketControlsRef.current.brake = true;
+                }}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  rocketControlsRef.current.brake = false;
+                }}
+                className="px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 active:bg-amber-500/40 text-amber-300 border border-amber-500/40 font-mono text-xs font-bold flex items-center justify-center gap-1.5 active:scale-90 transition-all shadow-md"
+                title="Tekan untuk Mengerem"
+              >
+                <span>REM</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* SOLAR SYSTEM FLOATING BOTTOM BAR (When Not in Rocket Mode) */}
+      {/* ========================================================= */}
+      {!isRocketMode && (
+        <div className="absolute bottom-2 left-2 right-2 sm:bottom-3 sm:left-3 sm:right-3 z-20 flex items-center justify-between gap-1.5 sm:gap-2 pointer-events-auto">
+          {/* Planet Quick Selector Pills */}
+          <div className="flex items-center gap-1 overflow-x-auto py-1 px-1.5 sm:py-1.5 sm:px-2 bg-[#070912]/90 rounded-lg sm:rounded-xl border border-white/12 font-mono text-[10px] sm:text-[11px] max-w-[60%] sm:max-w-[70%] scrollbar-none shadow-lg">
+            {allBodies.map((body) => {
+              const isSelected = selectedBody?.id === body.id;
+              return (
+                <button
+                  key={body.id}
+                  onClick={() => {
+                    if (isSelected) {
+                      handleSelectBody(null);
+                    } else {
+                      handleSelectBody(body);
+                    }
+                  }}
+                  className={`px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md sm:rounded-lg whitespace-nowrap transition-all flex items-center gap-1 text-[10px] sm:text-[11px] ${
+                    isSelected
+                      ? "bg-white text-black font-bold shadow-sm"
+                      : "text-zinc-400 hover:text-white hover:bg-white/10"
+                  }`}
+                >
+                  <span
+                    className="w-1.5 h-1.5 rounded-full inline-block flex-shrink-0"
+                    style={{
+                      backgroundColor: `#${body.fallbackColor.toString(16).padStart(6, "0")}`,
+                    }}
+                  />
+                  <span className="font-medium">{body.name}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Center/Action: Launch Controllable Space Rocket Button */}
           <button
             onClick={() => {
               playClickSound();
-              setOrbitSpeedFactor((prev) => (prev === 1.0 ? 2.0 : prev === 2.0 ? 0.5 : 1.0));
+              launchRocketRef.current();
             }}
-            className="px-2 py-1 sm:px-2.5 sm:py-1 rounded-lg font-mono text-[10px] sm:text-[11px] font-semibold bg-[#070912]/90 hover:bg-white/15 text-zinc-300 hover:text-white border border-white/12 transition-all shadow-md active:scale-95"
-            title="Ubah kecepatan orbit simulasi"
+            className="flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl bg-gradient-to-r from-cyan-500/20 to-blue-600/20 hover:from-cyan-500/35 hover:to-blue-600/35 text-cyber-cyan border border-cyber-cyan/40 font-mono text-[10px] sm:text-xs font-bold transition-all shadow-md active:scale-95 flex-shrink-0"
+            title="Luncurkan dan kendalikan roket penjelajah antariksa!"
           >
-            {orbitSpeedFactor}x
+            <Rocket className="w-3.5 h-3.5 text-cyber-cyan animate-pulse" />
+            <span>Mode Roket</span>
           </button>
 
-          {/* Orbit Play / Pause Button */}
-          <button
-            onClick={() => {
-              setIsPlaying(!isPlaying);
-              playClickSound();
-            }}
-            className={`flex items-center gap-1 px-2 py-1 sm:px-2.5 sm:py-1 rounded-lg font-mono text-[10px] sm:text-[11px] font-semibold border transition-all shadow-md active:scale-95 ${
-              isPlaying
-                ? "bg-[#070912]/90 text-white border-white/15 hover:bg-white/15"
-                : "bg-amber-400/20 text-amber-300 border-amber-400/40 hover:bg-amber-400/30"
-            }`}
-            title={isPlaying ? "Jeda rotasi & orbit" : "Lanjutkan rotasi & orbit"}
-          >
-            {isPlaying ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3 fill-current" />}
-            <span className="hidden sm:inline">{isPlaying ? "Pause" : "Play"}</span>
-          </button>
+          {/* Orbit Speed & Play/Pause Controls */}
+          <div className="flex items-center gap-1 sm:gap-1.5 flex-shrink-0">
+            {/* Speed Toggle (1x / 2x / 0.5x) */}
+            <button
+              onClick={() => {
+                playClickSound();
+                setOrbitSpeedFactor((prev) => (prev === 1.0 ? 2.0 : prev === 2.0 ? 0.5 : 1.0));
+              }}
+              className="px-2 py-1 sm:px-2.5 sm:py-1 rounded-lg font-mono text-[10px] sm:text-[11px] font-semibold bg-[#070912]/90 hover:bg-white/15 text-zinc-300 hover:text-white border border-white/12 transition-all shadow-md active:scale-95"
+              title="Ubah kecepatan orbit simulasi"
+            >
+              {orbitSpeedFactor}x
+            </button>
+
+            {/* Orbit Play / Pause Button */}
+            <button
+              onClick={() => {
+                setIsPlaying(!isPlaying);
+                playClickSound();
+              }}
+              className={`flex items-center gap-1 px-2 py-1 sm:px-2.5 sm:py-1 rounded-lg font-mono text-[10px] sm:text-[11px] font-semibold border transition-all shadow-md active:scale-95 ${
+                isPlaying
+                  ? "bg-[#070912]/90 text-white border-white/15 hover:bg-white/15"
+                  : "bg-amber-400/20 text-amber-300 border-amber-400/40 hover:bg-amber-400/30"
+              }`}
+              title={isPlaying ? "Jeda rotasi & orbit" : "Lanjutkan rotasi & orbit"}
+            >
+              {isPlaying ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3 fill-current" />}
+              <span className="hidden sm:inline">{isPlaying ? "Pause" : "Play"}</span>
+            </button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

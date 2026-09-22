@@ -44,16 +44,16 @@ export default function ContactSection() {
   return (
     <section id="faq" className="py-14 md:py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-14">
       {/* Contact Card */}
-      <div className="rounded-3xl bg-[#090b12] border border-white/10 p-8 sm:p-12 md:p-16 shadow-2xl">
+      <div className="rounded-3xl bg-[#060814]/90 backdrop-blur-2xl border border-white/10 p-8 sm:p-12 md:p-16 shadow-2xl hover:border-cyber-cyan/30 transition-all">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
           <div className="lg:col-span-7 space-y-5">
             <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 font-mono text-xs sm:text-sm md:text-base text-emerald-400">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
-              <span className="font-semibold tracking-wide">ONLINE &amp; SIAP TRANSAKSI</span>
+              <span className="font-semibold tracking-wide">SATELIT KOMUNIKASI AKTIF • SIAP TRANSAKSI</span>
             </div>
 
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight leading-tight">
-              Tertarik Beli Source Code?
+              Stasiun Transmisi &amp; Pembelian Source Code
             </h2>
 
             <p className="text-sm sm:text-base md:text-lg text-zinc-300 leading-relaxed max-w-xl">
@@ -122,7 +122,7 @@ export default function ContactSection() {
           {faqs.map((faq, idx) => (
             <div
               key={idx}
-              className="p-6 sm:p-7 md:p-8 rounded-2xl bg-[#090b12] border border-white/10 space-y-2.5 hover:border-white/20 transition-colors shadow-lg"
+              className="p-6 sm:p-7 md:p-8 rounded-2xl bg-[#060814]/90 border border-white/10 space-y-2.5 hover:border-cyber-cyan/35 transition-all shadow-lg"
             >
               <h4 className="text-base sm:text-lg md:text-xl font-bold text-white tracking-tight leading-snug">
                 {faq.q}

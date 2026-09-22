@@ -9,15 +9,17 @@ import Footer from "@/components/ui/Footer";
 
 export default function HomePage() {
   return (
-    <div className="relative min-h-screen bg-[#050507] text-[#ededed] overflow-x-hidden selection:bg-cyber-cyan selection:text-black">
-      {/* Subtle Engineered Minimalist Grid (No tacky AI gradient) */}
-      <div className="fixed inset-0 bg-grid-cyber opacity-30 pointer-events-none -z-20" />
+    <div className="relative min-h-screen bg-[#030408] text-[#ededed] overflow-x-hidden selection:bg-cyber-cyan selection:text-black">
+      {/* Deep Space Cosmic Atmosphere & Starlight Backdrop */}
+      <div className="fixed inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(14,35,70,0.3),rgba(3,4,8,0))] pointer-events-none -z-10" />
+      <div className="fixed inset-0 bg-stars-pattern opacity-30 pointer-events-none -z-20" />
+      <div className="fixed inset-0 bg-grid-space opacity-25 pointer-events-none -z-30" />
 
       {/* Floating Modern Header */}
       <Navbar />
 
       {/* Main Page Flow */}
-      <main className="relative z-10 space-y-2">
+      <main className="relative z-10 space-y-4">
         <HeroSection />
         <ProductCatalog />
         <ContactSection />
