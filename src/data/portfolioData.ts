@@ -1,8 +1,16 @@
+import profileJson from "./profile.json";
+import projectsJson from "./projects.json";
+
+export interface ProjectCategory {
+  id: string;
+  name: string;
+}
+
 export interface ProductItem {
   id: string;
   title: string;
   subtitle: string;
-  category: "Web Application" | "Android Application" | "Developer Tool";
+  category: "Web Application" | "Android Application" | "Developer Tool" | string;
   price: number;
   formattedPrice: string;
   description: string;
@@ -15,141 +23,29 @@ export interface ProductItem {
   featured?: boolean;
 }
 
+export interface ProfileIdentity {
+  fullName: string;
+  shortName: string;
+  initials: string;
+  role: string;
+  tagline: string;
+  description: string;
+  statusBadge: string;
+  phone: string;
+  whatsappFormatted: string;
+  whatsappUrl: string;
+  location: string;
+  github: string;
+  socials?: {
+    github?: string;
+    whatsapp?: string;
+    [key: string]: string | undefined;
+  };
+  guarantees?: string[];
+}
+
 export const PORTFOLIO_DATA = {
-  identity: {
-    fullName: "Adnan Ferdiansyah",
-    shortName: "Adnan",
-    initials: "AF",
-    role: "Fullstack & Mobile Engineer",
-    tagline: "Websites & Android Application Source Code Portfolio",
-    phone: "+62 831-8656-1414",
-    whatsappUrl: "https://wa.me/6283186561414",
-    whatsappFormatted: "+62 831-8656-1414",
-    location: "Indonesia",
-    statusBadge: "SOURCE CODE FOR SALE",
-    github: "https://github.com/nanasmuda121",
-  },
-  products: [
-    {
-      id: "nanztube",
-      title: "NanzTube",
-      subtitle: "Modern Android YouTube Client",
-      category: "Android Application" as const,
-      price: 15000,
-      formattedPrice: "IDR 15.000",
-      description:
-        "A fast, privacy-respecting YouTube client for Android dengan layout YouTube native, pemutaran background, ad-blocking, tab Shorts, dan sistem caching offline.",
-      features: [
-        "100% Native Kotlin & Jetpack Compose (Material 3)",
-        "Background playback & Audio streaming",
-        "Bebas iklan tanpa login akun Google",
-        "Clean architecture & modular package",
-      ],
-      techStack: ["Kotlin", "Jetpack Compose", "ExoPlayer", "Material 3"],
-      logo: "/logos/nanztube.png",
-      apkUrl: "https://www.mediafire.com/file/78fjqhuyft2j3zo/NanzTube-release.apk/file",
-      badge: "BESTSELLER",
-      featured: true,
-    },
-    {
-      id: "beatles",
-      title: "Beatles Music",
-      subtitle: "Android Kotlin Audio & TV Player",
-      category: "Android Application" as const,
-      price: 15000,
-      formattedPrice: "IDR 15.000",
-      description:
-        "Aplikasi pemutar musik Android canggih dengan sinkronisasi lirik real-time, audio equalizer, manajemen playlist, dan dukungan tampilan Beatles TV.",
-      features: [
-        "Modern Android Architecture dengan Media3 / ExoPlayer",
-        "Dukungan Android TV & Auto UI layout",
-        "Equalizer grafis & bass boost bawaan",
-        "Offline playback & pencarian instan",
-      ],
-      techStack: ["Kotlin", "ExoPlayer", "Room DB", "Jetpack Compose"],
-      logo: "/logos/beatles.png",
-      apkUrl: "https://www.mediafire.com/file/wrdsd287jya8jwr/Beatles.apk/file",
-      badge: "POPULAR",
-      featured: true,
-    },
-    {
-      id: "nanzmusify",
-      title: "NanzMusify",
-      subtitle: "Interactive Web Music Player",
-      category: "Web Application" as const,
-      price: 10000,
-      formattedPrice: "IDR 10.000",
-      description:
-        "Platform pemutar musik berbasis web modern dengan streaming cepat, antarmuka responsif, visual spectrum, dan navigasi ramah mobile.",
-      features: [
-        "Frontend responsif siap deploy Netlify/Vercel",
-        "Audio engine dengan Web Audio API",
-        "Animasi pemutar musik fluid dan mulus",
-        "Struktur kode modular dan mudah dikustomisasi",
-      ],
-      techStack: ["React", "JavaScript", "Tailwind CSS", "Web Audio"],
-      logo: "/logos/nanzmusify.png",
-      demoUrl: "https://nanzz-music.netlify.app",
-      featured: true,
-    },
-    {
-      id: "quickrepos",
-      title: "QuickRepos",
-      subtitle: "Instant GitHub Uploader Web Tool",
-      category: "Developer Tool" as const,
-      price: 10000,
-      formattedPrice: "IDR 10.000",
-      description:
-        "Upload folder atau file langsung ke repository GitHub baru dari browser tanpa perlu instalasi Git di komputer atau smartphone.",
-      features: [
-        "Direct GitHub API Integration dengan Personal Access Token",
-        "Drag & Drop seluruh folder project dengan nested path",
-        "Otomatisasi pembuatan repo publik atau privat",
-        "Sangat praktis untuk developer mobile & pemula",
-      ],
-      techStack: ["Next.js", "TypeScript", "GitHub Octokit API", "Tailwind CSS"],
-      logo: "/logos/quickrepos.webp",
-      demoUrl: "https://quickrepos.netlify.app",
-      featured: true,
-    },
-    {
-      id: "qurandulu",
-      title: "Qur'an Digital",
-      subtitle: "Al-Qur'an Web App 114 Surat & Audio",
-      category: "Web Application" as const,
-      price: 3000,
-      formattedPrice: "IDR 3.000",
-      description:
-        "Aplikasi Al-Qur'an digital responsif mencakup 114 Surat, 30 Juz, audio murottal tiap surah, penanda bookmark, dan kumpulan doa harian.",
-      features: [
-        "Teks Arab tajwid yang jelas & terjemahan bahasa Indonesia",
-        "Player audio murottal per surah",
-        "Mode 30 Juz dan pencarian surat instan",
-        "Cepat & ringan dengan arsitektur statis",
-      ],
-      techStack: ["Next.js", "Tailwind CSS", "Quran API", "Audio Player"],
-      logo: "/logos/qurandulu.webp",
-      demoUrl: "https://quran-dulu.vercel.app",
-      featured: false,
-    },
-    {
-      id: "modkite",
-      title: "ModKite",
-      subtitle: "Modular Digital Utility Platform",
-      category: "Web Application" as const,
-      price: 2000,
-      formattedPrice: "IDR 2.000",
-      description:
-        "Platform perkakas web interaktif dan modular yang dirancang untuk efisiensi utilitas digital.",
-      features: [
-        "Antarmuka minimalis dan clean",
-        "Struktur kode ringan tanpa dependensi berat",
-        "Siap dideploy langsung ke Netlify atau Vercel",
-      ],
-      techStack: ["Web Application", "Tailwind CSS", "JavaScript"],
-      logo: "/logos/modkite.svg",
-      demoUrl: "https://modkite.netlify.app",
-      featured: false,
-    },
-  ],
+  identity: profileJson as ProfileIdentity,
+  categories: projectsJson.categories as ProjectCategory[],
+  products: projectsJson.projects as ProductItem[],
 };

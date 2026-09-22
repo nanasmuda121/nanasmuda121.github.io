@@ -9,26 +9,21 @@ import { Code, Smartphone, Globe, Layers } from "lucide-react";
 export default function ProductCatalog() {
   const [activeFilter, setActiveFilter] = useState<string>("ALL");
 
+  const categories = PORTFOLIO_DATA.categories;
   const products = PORTFOLIO_DATA.products;
 
-  const filters = [
-    { id: "ALL", label: "Semua Produk", count: products.length },
-    {
-      id: "ANDROID",
-      label: "Android Apps",
-      count: products.filter((p) => p.category === "Android Application").length,
-    },
-    {
-      id: "WEB",
-      label: "Web Apps & Tools",
-      count: products.filter((p) => p.category !== "Android Application").length,
-    },
-  ];
+  const filters = categories.map((cat) => ({
+    id: cat.id,
+    label: cat.name,
+    count:
+      cat.id === "ALL"
+        ? products.length
+        : products.filter((p) => p.category === cat.id).length,
+  }));
 
   const filteredProducts = products.filter((p) => {
-    if (activeFilter === "ANDROID") return p.category === "Android Application";
-    if (activeFilter === "WEB") return p.category !== "Android Application";
-    return true;
+    if (activeFilter === "ALL") return true;
+    return p.category === activeFilter;
   });
 
   return (

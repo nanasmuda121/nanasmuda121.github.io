@@ -184,28 +184,28 @@ export default function HeroCanvas3D() {
     // Helper: Create 3D Label Sprite
     function createNameSprite(name: string, colorHex: number) {
       const canvas = document.createElement("canvas");
-      canvas.width = 256;
-      canvas.height = 64;
+      canvas.width = 512;
+      canvas.height = 128;
       const ctx = canvas.getContext("2d");
       if (!ctx) return new THREE.Sprite();
 
       ctx.fillStyle = "rgba(8, 10, 18, 0.88)";
       ctx.beginPath();
-      ctx.roundRect(6, 6, 244, 52, 16);
+      ctx.roundRect(12, 12, 488, 104, 32);
       ctx.fill();
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 4;
       ctx.strokeStyle = "rgba(255, 255, 255, 0.35)";
       ctx.stroke();
 
       ctx.fillStyle = `#${colorHex.toString(16).padStart(6, "0")}`;
       ctx.beginPath();
-      ctx.arc(32, 32, 8, 0, Math.PI * 2);
+      ctx.arc(64, 64, 16, 0, Math.PI * 2);
       ctx.fill();
 
-      ctx.font = "bold 23px system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+      ctx.font = "bold 44px system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
       ctx.fillStyle = "#ffffff";
       ctx.textBaseline = "middle";
-      ctx.fillText(name, 52, 33);
+      ctx.fillText(name, 102, 66);
 
       const texture = new THREE.CanvasTexture(canvas);
       texture.minFilter = THREE.LinearFilter;
@@ -215,7 +215,7 @@ export default function HeroCanvas3D() {
         depthTest: false,
       });
       const sprite = new THREE.Sprite(spriteMaterial);
-      sprite.scale.set(1.45, 0.36, 1);
+      sprite.scale.set(1.5, 0.38, 1);
       return sprite;
     }
 
@@ -707,17 +707,28 @@ export default function HeroCanvas3D() {
             baseCamZ + rightZ * waveSide
           );
 
-          // 4. Natural left-side framing (around 32% from left edge for wide/landscape)
-          const isWideView =
+          // 4. Exact NDC Analytical Left-Side Framing
+          // Mathematically targets the exact horizontal screen coordinate x_target in NDC [-1, 1]
+          // On wide screens (laptop/desktop/fullscreen landscape), target is x = -0.34 (33% from left edge)
+          // On mobile portrait, target is x = 0.0 (center) and target y = +0.22 (upper viewport above sheet)
+          const aspect =
+            camera.aspect ||
             (canvasHolder.clientWidth || window.innerWidth) /
-              Math.max(canvasHolder.clientHeight || window.innerHeight, 1) >
-            1.15;
-          const shiftFactor = isWideView ? 0.32 : 0.18;
-          const shiftDist = zoomDistance * shiftFactor;
+              Math.max(canvasHolder.clientHeight || window.innerHeight, 1);
+          const isWideView = aspect > 1.15;
+          const halfFovTan = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+
+          const xTarget = isWideView ? -0.34 : 0.0;
+          const yTarget = isWideView ? 0.0 : 0.22;
+
+          // In Three.js projection: x_ndc = -shift_x / (D * halfFovTan * aspect)
+          // Thus: shiftDist = -xTarget * zoomDistance * halfFovTan * aspect
+          const shiftDist = -xTarget * zoomDistance * halfFovTan * aspect;
+          const vertDist = -yTarget * zoomDistance * halfFovTan;
 
           lookTarget.set(
             targetWorldPos.x + rightX * shiftDist + rightX * (waveSide * 0.25),
-            targetWorldPos.y + waveUp * 0.25,
+            targetWorldPos.y + vertDist + waveUp * 0.25,
             targetWorldPos.z + rightZ * shiftDist + rightZ * (waveSide * 0.25)
           );
 
@@ -818,7 +829,7 @@ export default function HeroCanvas3D() {
       className={`relative select-none overflow-hidden transition-all duration-300 ${
         isFullscreen
           ? "fixed inset-0 z-[9999] w-screen h-screen bg-[#030407]"
-          : "w-full h-[480px] sm:h-[540px] md:h-[600px] rounded-2xl bg-[#040508] border border-white/10 shadow-2xl"
+          : "w-full h-[520px] sm:h-[600px] md:h-[660px] lg:h-[720px] rounded-3xl bg-[#040508] border border-white/10 shadow-2xl"
       }`}
     >
       {/* 3D WebGL Canvas Container: absolute inset-0 guarantees it always fills 100% of the box */}
@@ -829,29 +840,29 @@ export default function HeroCanvas3D() {
       />
 
       {/* Top Left: Astronomical HUD Badge */}
-      <div className="absolute top-4 left-4 z-20 flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/80 backdrop-blur-md border border-white/10 font-mono text-xs text-zinc-300 pointer-events-none">
+      <div className="absolute top-4 left-4 z-20 flex items-center gap-2.5 px-4 py-2 rounded-full bg-black/80 backdrop-blur-md border border-white/10 font-mono text-xs sm:text-sm text-zinc-300 pointer-events-none">
         <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
         <span className="font-semibold text-white">Tata Surya 3D Realistis</span>
         <span className="text-zinc-600">•</span>
-        <span className="text-cyber-cyan text-[11px]">Dynamic Tracking</span>
+        <span className="text-cyber-cyan text-xs font-semibold">Dynamic Tracking</span>
       </div>
 
       {/* Top Right Controls: Fullscreen Landscape + Reset */}
-      <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+      <div className="absolute top-4 right-4 z-20 flex items-center gap-2.5">
         {/* Fullscreen Landscape Toggle */}
         <button
           onClick={toggleFullscreen}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-black/80 hover:bg-white/15 text-white backdrop-blur-md border border-white/20 font-mono text-xs font-semibold transition-all active:scale-95 shadow-lg"
+          className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-black/80 hover:bg-white/15 text-white backdrop-blur-md border border-white/20 font-mono text-xs sm:text-sm font-semibold transition-all active:scale-95 shadow-lg"
           title={isFullscreen ? "Keluar Mode Layar Penuh" : "Mode Fullscreen Landscape (Layar Penuh Android)"}
         >
           {isFullscreen ? (
             <>
-              <Minimize2 className="w-3.5 h-3.5 text-amber-400" />
+              <Minimize2 className="w-4 h-4 text-amber-400" />
               <span className="hidden sm:inline">Keluar Layar Penuh</span>
             </>
           ) : (
             <>
-              <Maximize2 className="w-3.5 h-3.5 text-cyber-cyan" />
+              <Maximize2 className="w-4 h-4 text-cyber-cyan" />
               <span>Fullscreen Landscape</span>
             </>
           )}
@@ -861,10 +872,10 @@ export default function HeroCanvas3D() {
         {selectedBody && (
           <button
             onClick={() => handleSelectBody(null)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/20 font-mono text-xs font-semibold transition-all active:scale-95 shadow-lg"
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/20 font-mono text-xs sm:text-sm font-semibold transition-all active:scale-95 shadow-lg"
             title="Kembali ke tampilan seluruh tata surya"
           >
-            <RotateCcw className="w-3.5 h-3.5 text-cyber-cyan" />
+            <RotateCcw className="w-4 h-4 text-cyber-cyan" />
             <span className="hidden sm:inline">Tata Surya (Reset)</span>
           </button>
         )}
@@ -872,7 +883,7 @@ export default function HeroCanvas3D() {
 
       {/* Overview Drag Hint */}
       {!selectedBody && (
-        <div className="absolute top-16 right-4 z-20 px-2.5 py-1 rounded-lg bg-black/60 backdrop-blur-sm border border-white/5 font-mono text-[10px] text-zinc-400 pointer-events-none hidden sm:block">
+        <div className="absolute top-16 right-4 z-20 px-3 py-1.5 rounded-xl bg-black/70 backdrop-blur-md border border-white/10 font-mono text-xs text-zinc-300 pointer-events-none hidden sm:block">
           KLIK PLANET UNTUK TRACKING ORBIT • DRAG 360°
         </div>
       )}
@@ -882,56 +893,56 @@ export default function HeroCanvas3D() {
         <div
           className={`absolute z-30 overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 text-white animate-in fade-in slide-in-from-right duration-300 ${
             isFullscreen
-              ? "top-16 right-4 bottom-20 w-[92vw] sm:w-[380px] p-5 rounded-2xl bg-black/90 backdrop-blur-2xl border border-white/20 shadow-2xl space-y-4"
-              : "top-16 right-4 bottom-20 w-[90vw] sm:w-[340px] md:w-[360px] p-4 sm:p-5 rounded-2xl bg-black/85 backdrop-blur-xl border border-white/15 shadow-2xl space-y-3.5"
+              ? "top-16 right-4 sm:right-6 bottom-20 sm:bottom-24 w-[92vw] sm:w-[380px] md:w-[420px] p-5 sm:p-6 rounded-2xl bg-black/90 backdrop-blur-2xl border border-white/20 shadow-2xl space-y-4"
+              : "top-16 right-4 sm:right-6 bottom-20 sm:bottom-24 w-[92vw] sm:w-[380px] md:w-[420px] lg:w-[440px] p-5 sm:p-6 rounded-2xl bg-black/90 backdrop-blur-2xl border border-white/15 shadow-2xl space-y-4"
           }`}
         >
           {/* Card Header */}
-          <div className="flex items-start justify-between gap-2 border-b border-white/10 pb-3">
+          <div className="flex items-start justify-between gap-3 border-b border-white/10 pb-3">
             <div>
-              <div className="flex items-center gap-2 mb-1 font-mono text-[11px]">
-                <span className="px-2 py-0.5 rounded-full bg-white/10 text-cyber-cyan font-semibold">
+              <div className="flex items-center gap-2 mb-1 font-mono text-xs">
+                <span className="px-2.5 py-0.5 rounded-full bg-white/10 text-cyber-cyan font-semibold">
                   {selectedBody.type}
                 </span>
-                <span className="text-emerald-400 text-[10px] font-mono flex items-center gap-1">
+                <span className="text-emerald-400 text-xs font-mono flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                   Kamera Mengikuti Orbit
                 </span>
               </div>
-              <h3 className="text-2xl font-black tracking-tight flex items-center gap-2">
+              <h3 className="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-2.5">
                 <span>{selectedBody.name}</span>
                 <span
-                  className="w-2.5 h-2.5 rounded-full inline-block"
+                  className="w-3 h-3 rounded-full inline-block"
                   style={{
                     backgroundColor: `#${selectedBody.fallbackColor.toString(16).padStart(6, "0")}`,
                   }}
                 />
               </h3>
-              <p className="text-xs text-zinc-400 font-mono mt-0.5">{selectedBody.tagline}</p>
+              <p className="text-xs sm:text-sm text-zinc-400 font-mono mt-0.5">{selectedBody.tagline}</p>
             </div>
 
             <button
               onClick={() => handleSelectBody(null)}
-              className="p-1.5 rounded-lg bg-white/5 hover:bg-white/15 text-zinc-400 hover:text-white transition-colors"
+              className="p-2 rounded-xl bg-white/5 hover:bg-white/15 text-zinc-400 hover:text-white transition-colors"
               title="Tutup & kembali ke orbit overview"
             >
-              <X className="w-4 h-4" />
+              <X className="w-5 h-5" />
             </button>
           </div>
 
           {/* Description */}
-          <p className="text-xs text-zinc-300 leading-relaxed font-sans">
+          <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed font-sans">
             {selectedBody.description}
           </p>
 
           {/* Category Tabs: Ringkasan, Fisik, Orbit */}
-          <div className="flex items-center gap-1 p-1 rounded-xl bg-white/5 border border-white/10 font-mono text-[11px]">
+          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-white/5 border border-white/10 font-mono text-xs sm:text-sm">
             <button
               onClick={() => {
                 setActiveTab("ringkasan");
                 playClickSound();
               }}
-              className={`flex-1 py-1 rounded-lg transition-all ${
+              className={`flex-1 py-1.5 rounded-lg transition-all ${
                 activeTab === "ringkasan" ? "bg-white text-black font-bold shadow" : "text-zinc-400 hover:text-white"
               }`}
             >
@@ -942,7 +953,7 @@ export default function HeroCanvas3D() {
                 setActiveTab("fisik");
                 playClickSound();
               }}
-              className={`flex-1 py-1 rounded-lg transition-all ${
+              className={`flex-1 py-1.5 rounded-lg transition-all ${
                 activeTab === "fisik" ? "bg-white text-black font-bold shadow" : "text-zinc-400 hover:text-white"
               }`}
             >
@@ -953,7 +964,7 @@ export default function HeroCanvas3D() {
                 setActiveTab("orbit");
                 playClickSound();
               }}
-              className={`flex-1 py-1 rounded-lg transition-all ${
+              className={`flex-1 py-1.5 rounded-lg transition-all ${
                 activeTab === "orbit" ? "bg-white text-black font-bold shadow" : "text-zinc-400 hover:text-white"
               }`}
             >
@@ -963,62 +974,62 @@ export default function HeroCanvas3D() {
 
           {/* TAB 1: Ringkasan */}
           {activeTab === "ringkasan" && (
-            <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-2 font-mono text-[11px]">
-                <div className="p-2 rounded-xl bg-white/5 border border-white/5 space-y-0.5">
-                  <div className="flex items-center gap-1.5 text-zinc-400">
-                    <Compass className="w-3 h-3 text-cyber-cyan" />
+            <div className="space-y-3.5">
+              <div className="grid grid-cols-2 gap-2.5 font-mono text-xs sm:text-sm">
+                <div className="p-2.5 sm:p-3 rounded-xl bg-white/5 border border-white/5 space-y-1">
+                  <div className="flex items-center gap-1.5 text-zinc-400 text-xs">
+                    <Compass className="w-3.5 h-3.5 text-cyber-cyan" />
                     <span>Diameter</span>
                   </div>
-                  <div className="font-bold text-white text-xs">{selectedBody.diameter}</div>
+                  <div className="font-bold text-white text-xs sm:text-sm">{selectedBody.diameter}</div>
                 </div>
 
-                <div className="p-2 rounded-xl bg-white/5 border border-white/5 space-y-0.5">
-                  <div className="flex items-center gap-1.5 text-zinc-400">
-                    <Sparkles className="w-3 h-3 text-amber-400" />
+                <div className="p-2.5 sm:p-3 rounded-xl bg-white/5 border border-white/5 space-y-1">
+                  <div className="flex items-center gap-1.5 text-zinc-400 text-xs">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-400" />
                     <span>Jarak Matahari</span>
                   </div>
-                  <div className="font-bold text-white text-xs truncate" title={selectedBody.distanceFromSun}>
+                  <div className="font-bold text-white text-xs sm:text-sm truncate" title={selectedBody.distanceFromSun}>
                     {selectedBody.distanceFromSun}
                   </div>
                 </div>
 
-                <div className="p-2 rounded-xl bg-white/5 border border-white/5 space-y-0.5">
-                  <div className="flex items-center gap-1.5 text-zinc-400">
-                    <Clock className="w-3 h-3 text-indigo-400" />
+                <div className="p-2.5 sm:p-3 rounded-xl bg-white/5 border border-white/5 space-y-1">
+                  <div className="flex items-center gap-1.5 text-zinc-400 text-xs">
+                    <Clock className="w-3.5 h-3.5 text-indigo-400" />
                     <span>Kala Rotasi</span>
                   </div>
-                  <div className="font-bold text-white text-xs truncate" title={selectedBody.rotationPeriod}>
+                  <div className="font-bold text-white text-xs sm:text-sm truncate" title={selectedBody.rotationPeriod}>
                     {selectedBody.rotationPeriod}
                   </div>
                 </div>
 
-                <div className="p-2 rounded-xl bg-white/5 border border-white/5 space-y-0.5">
-                  <div className="flex items-center gap-1.5 text-zinc-400">
-                    <Calendar className="w-3 h-3 text-pink-400" />
+                <div className="p-2.5 sm:p-3 rounded-xl bg-white/5 border border-white/5 space-y-1">
+                  <div className="flex items-center gap-1.5 text-zinc-400 text-xs">
+                    <Calendar className="w-3.5 h-3.5 text-pink-400" />
                     <span>Kala Revolusi</span>
                   </div>
-                  <div className="font-bold text-white text-xs truncate" title={selectedBody.orbitalPeriod}>
+                  <div className="font-bold text-white text-xs sm:text-sm truncate" title={selectedBody.orbitalPeriod}>
                     {selectedBody.orbitalPeriod}
                   </div>
                 </div>
 
-                <div className="p-2 rounded-xl bg-white/5 border border-white/5 space-y-0.5">
-                  <div className="flex items-center gap-1.5 text-zinc-400">
-                    <Thermometer className="w-3 h-3 text-red-400" />
+                <div className="p-2.5 sm:p-3 rounded-xl bg-white/5 border border-white/5 space-y-1">
+                  <div className="flex items-center gap-1.5 text-zinc-400 text-xs">
+                    <Thermometer className="w-3.5 h-3.5 text-red-400" />
                     <span>Suhu Rata-rata</span>
                   </div>
-                  <div className="font-bold text-white text-xs truncate" title={selectedBody.temperature}>
+                  <div className="font-bold text-white text-xs sm:text-sm truncate" title={selectedBody.temperature}>
                     {selectedBody.temperature}
                   </div>
                 </div>
 
-                <div className="p-2 rounded-xl bg-white/5 border border-white/5 space-y-0.5">
-                  <div className="flex items-center gap-1.5 text-zinc-400">
-                    <Globe className="w-3 h-3 text-emerald-400" />
+                <div className="p-2.5 sm:p-3 rounded-xl bg-white/5 border border-white/5 space-y-1">
+                  <div className="flex items-center gap-1.5 text-zinc-400 text-xs">
+                    <Globe className="w-3.5 h-3.5 text-emerald-400" />
                     <span>Satelit Alami</span>
                   </div>
-                  <div className="font-bold text-white text-xs truncate" title={selectedBody.moonsCount}>
+                  <div className="font-bold text-white text-xs sm:text-sm truncate" title={selectedBody.moonsCount}>
                     {selectedBody.moonsCount}
                   </div>
                 </div>
@@ -1026,14 +1037,14 @@ export default function HeroCanvas3D() {
 
               {/* Major Moons List if present */}
               {selectedBody.majorMoons && selectedBody.majorMoons.length > 0 && (
-                <div className="p-2.5 rounded-xl bg-white/5 border border-white/5 font-mono text-[11px] space-y-1">
-                  <div className="text-zinc-400 font-semibold flex items-center gap-1.5">
-                    <Layers className="w-3 h-3 text-cyber-cyan" />
+                <div className="p-3 rounded-xl bg-white/5 border border-white/5 font-mono text-xs space-y-1.5">
+                  <div className="text-zinc-300 font-semibold flex items-center gap-2">
+                    <Layers className="w-3.5 h-3.5 text-cyber-cyan" />
                     <span>Satelit Utama Terkenal:</span>
                   </div>
-                  <div className="flex flex-wrap gap-1 pt-0.5">
+                  <div className="flex flex-wrap gap-1.5 pt-1">
                     {selectedBody.majorMoons.map((m) => (
-                      <span key={m} className="px-2 py-0.5 rounded-md bg-white/10 text-white text-[10px]">
+                      <span key={m} className="px-2.5 py-1 rounded-lg bg-white/10 text-white text-xs">
                         {m}
                       </span>
                     ))}
@@ -1045,101 +1056,101 @@ export default function HeroCanvas3D() {
 
           {/* TAB 2: Data Fisik */}
           {activeTab === "fisik" && (
-            <div className="space-y-2 font-mono text-[11px]">
-              <div className="p-2.5 rounded-xl bg-white/5 border border-white/5 space-y-1">
-                <div className="text-zinc-400">Massa Planet:</div>
-                <div className="font-bold text-white text-xs">{selectedBody.mass}</div>
+            <div className="space-y-2.5 font-mono text-xs sm:text-sm">
+              <div className="p-3 rounded-xl bg-white/5 border border-white/5 space-y-1">
+                <div className="text-zinc-400 text-xs">Massa Planet:</div>
+                <div className="font-bold text-white text-xs sm:text-sm">{selectedBody.mass}</div>
               </div>
 
-              <div className="p-2.5 rounded-xl bg-white/5 border border-white/5 space-y-1">
-                <div className="text-zinc-400 flex items-center gap-1.5">
-                  <Gauge className="w-3 h-3 text-emerald-400" />
+              <div className="p-3 rounded-xl bg-white/5 border border-white/5 space-y-1">
+                <div className="text-zinc-400 text-xs flex items-center gap-1.5">
+                  <Gauge className="w-3.5 h-3.5 text-emerald-400" />
                   <span>Gravitasi Permukaan:</span>
                 </div>
-                <div className="font-bold text-white text-xs">{selectedBody.gravity}</div>
+                <div className="font-bold text-white text-xs sm:text-sm">{selectedBody.gravity}</div>
               </div>
 
-              <div className="p-2.5 rounded-xl bg-white/5 border border-white/5 space-y-1">
-                <div className="text-zinc-400">Kecepatan Lepas (Escape Velocity):</div>
-                <div className="font-bold text-white text-xs">{selectedBody.escapeVelocity}</div>
+              <div className="p-3 rounded-xl bg-white/5 border border-white/5 space-y-1">
+                <div className="text-zinc-400 text-xs">Kecepatan Lepas (Escape Velocity):</div>
+                <div className="font-bold text-white text-xs sm:text-sm">{selectedBody.escapeVelocity}</div>
               </div>
 
-              <div className="p-2.5 rounded-xl bg-white/5 border border-white/5 space-y-1">
-                <div className="text-zinc-400 flex items-center gap-1.5">
-                  <RotateCw className="w-3 h-3 text-amber-400" />
+              <div className="p-3 rounded-xl bg-white/5 border border-white/5 space-y-1">
+                <div className="text-zinc-400 text-xs flex items-center gap-1.5">
+                  <RotateCw className="w-3.5 h-3.5 text-amber-400" />
                   <span>Kemiringan Sumbu Rotasi (Axial Tilt):</span>
                 </div>
-                <div className="font-bold text-white text-xs">{selectedBody.axialTilt}</div>
+                <div className="font-bold text-white text-xs sm:text-sm">{selectedBody.axialTilt}</div>
               </div>
             </div>
           )}
 
           {/* TAB 3: Orbit & Iklim */}
           {activeTab === "orbit" && (
-            <div className="space-y-2 font-mono text-[11px]">
-              <div className="p-2.5 rounded-xl bg-white/5 border border-white/5 space-y-1">
-                <div className="text-zinc-400">Kecepatan Orbit Mengitari Matahari:</div>
-                <div className="font-bold text-white text-xs">{selectedBody.orbitalVelocity}</div>
+            <div className="space-y-2.5 font-mono text-xs sm:text-sm">
+              <div className="p-3 rounded-xl bg-white/5 border border-white/5 space-y-1">
+                <div className="text-zinc-400 text-xs">Kecepatan Orbit Mengitari Matahari:</div>
+                <div className="font-bold text-white text-xs sm:text-sm">{selectedBody.orbitalVelocity}</div>
               </div>
 
-              <div className="p-2.5 rounded-xl bg-white/5 border border-white/5 space-y-1">
-                <div className="text-zinc-400 flex items-center gap-1.5">
-                  <Wind className="w-3 h-3 text-cyber-cyan" />
+              <div className="p-3 rounded-xl bg-white/5 border border-white/5 space-y-1">
+                <div className="text-zinc-400 text-xs flex items-center gap-1.5">
+                  <Wind className="w-3.5 h-3.5 text-cyber-cyan" />
                   <span>Komposisi Atmosfer:</span>
                 </div>
-                <div className="text-zinc-200 text-[11px] leading-relaxed">{selectedBody.atmosphere}</div>
+                <div className="text-zinc-200 text-xs sm:text-sm leading-relaxed">{selectedBody.atmosphere}</div>
               </div>
 
-              <div className="p-2.5 rounded-xl bg-white/5 border border-white/5 space-y-1">
-                <div className="text-zinc-400 flex items-center gap-1.5">
-                  <Thermometer className="w-3 h-3 text-red-400" />
+              <div className="p-3 rounded-xl bg-white/5 border border-white/5 space-y-1">
+                <div className="text-zinc-400 text-xs flex items-center gap-1.5">
+                  <Thermometer className="w-3.5 h-3.5 text-red-400" />
                   <span>Rentang Suhu:</span>
                 </div>
-                <div className="font-bold text-white text-xs">{selectedBody.temperature}</div>
+                <div className="font-bold text-white text-xs sm:text-sm">{selectedBody.temperature}</div>
               </div>
             </div>
           )}
 
           {/* Fun Fact Callout */}
-          <div className="p-3 rounded-xl bg-cyber-cyan/10 border border-cyber-cyan/25 font-mono text-[11px] text-cyber-cyan leading-relaxed">
+          <div className="p-3.5 sm:p-4 rounded-xl bg-cyber-cyan/10 border border-cyber-cyan/25 font-mono text-xs sm:text-sm text-cyber-cyan leading-relaxed">
             <span className="font-bold">Fakta Ilmiah Unik: </span>
             <span className="text-zinc-200">{selectedBody.funFact}</span>
           </div>
 
           {/* Card Bottom Navigation: Prev, Overview, Next */}
-          <div className="flex items-center justify-between pt-2 border-t border-white/10 font-mono text-xs">
+          <div className="flex items-center justify-between pt-3 border-t border-white/10 font-mono text-xs sm:text-sm">
             <button
               onClick={handlePrevBody}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/15 text-zinc-300 hover:text-white transition-colors active:scale-95"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/15 text-zinc-200 hover:text-white transition-colors active:scale-95"
               title="Planet Sebelumnya"
             >
-              <ChevronLeft className="w-3.5 h-3.5" />
+              <ChevronLeft className="w-4 h-4" />
               <span>Sebelumnya</span>
             </button>
 
             <button
               onClick={() => handleSelectBody(null)}
-              className="text-[11px] text-zinc-400 hover:text-white underline underline-offset-4 transition-colors"
+              className="text-xs sm:text-sm text-zinc-400 hover:text-white underline underline-offset-4 transition-colors"
             >
               Kembali ke Orbit
             </button>
 
             <button
               onClick={handleNextBody}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/15 text-zinc-300 hover:text-white transition-colors active:scale-95"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/15 text-zinc-200 hover:text-white transition-colors active:scale-95"
               title="Planet Berikutnya"
             >
               <span>Selanjutnya</span>
-              <ChevronRight className="w-3.5 h-3.5" />
+              <ChevronRight className="w-4 h-4" />
             </button>
           </div>
         </div>
       )}
 
       {/* Bottom Floating Control Bar */}
-      <div className="absolute bottom-4 left-4 right-4 z-20 flex items-center justify-between gap-2 pointer-events-auto">
+      <div className="absolute bottom-4 left-4 right-4 z-20 flex items-center justify-between gap-3 pointer-events-auto">
         {/* Planet Quick Selector Pills */}
-        <div className="flex items-center gap-1 overflow-x-auto py-1.5 px-2 bg-black/80 backdrop-blur-md rounded-xl border border-white/10 font-mono text-[11px] max-w-[75%] scrollbar-none">
+        <div className="flex items-center gap-1.5 overflow-x-auto py-2 px-2.5 bg-black/80 backdrop-blur-md rounded-2xl border border-white/10 font-mono text-xs sm:text-sm max-w-[70%] sm:max-w-[78%] scrollbar-none">
           {allBodies.map((body) => {
             const isSelected = selectedBody?.id === body.id;
             return (
@@ -1152,33 +1163,33 @@ export default function HeroCanvas3D() {
                     handleSelectBody(body);
                   }
                 }}
-                className={`px-2.5 py-1 rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                className={`px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl whitespace-nowrap transition-all flex items-center gap-2 ${
                   isSelected
                     ? "bg-white text-black font-bold shadow-md scale-105"
-                    : "text-zinc-400 hover:text-white hover:bg-white/5"
+                    : "text-zinc-400 hover:text-white hover:bg-white/10"
                 }`}
               >
                 <span
-                  className="w-1.5 h-1.5 rounded-full inline-block"
+                  className="w-2 h-2 rounded-full inline-block flex-shrink-0"
                   style={{
                     backgroundColor: `#${body.fallbackColor.toString(16).padStart(6, "0")}`,
                   }}
                 />
-                <span>{body.name}</span>
+                <span className="font-medium">{body.name}</span>
               </button>
             );
           })}
         </div>
 
         {/* Orbit Speed & Play/Pause Controls */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-2 flex-shrink-0">
           {/* Speed Toggle (1x / 2x / 0.5x) */}
           <button
             onClick={() => {
               playClickSound();
               setOrbitSpeedFactor((prev) => (prev === 1.0 ? 2.0 : prev === 2.0 ? 0.5 : 1.0));
             }}
-            className="px-2.5 py-2 rounded-xl font-mono text-[11px] font-semibold bg-black/70 hover:bg-white/10 text-zinc-300 hover:text-white backdrop-blur-md border border-white/10 transition-all shadow-md"
+            className="px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl font-mono text-xs sm:text-sm font-semibold bg-black/80 hover:bg-white/15 text-zinc-200 hover:text-white backdrop-blur-md border border-white/15 transition-all shadow-md"
             title="Ubah kecepatan orbit simulasi"
           >
             {orbitSpeedFactor}x Speed
@@ -1190,14 +1201,14 @@ export default function HeroCanvas3D() {
               setIsPlaying(!isPlaying);
               playClickSound();
             }}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl font-mono text-xs font-semibold backdrop-blur-md border transition-all shadow-md active:scale-95 ${
+            className={`flex items-center gap-2 px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl font-mono text-xs sm:text-sm font-semibold backdrop-blur-md border transition-all shadow-md active:scale-95 ${
               isPlaying
-                ? "bg-white/10 text-white border-white/15 hover:bg-white/20"
+                ? "bg-white/15 text-white border-white/20 hover:bg-white/25"
                 : "bg-amber-400/20 text-amber-300 border-amber-400/40 hover:bg-amber-400/30"
             }`}
             title={isPlaying ? "Jeda rotasi & orbit" : "Lanjutkan rotasi & orbit"}
           >
-            {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 fill-current" />}
+            {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 fill-current" />}
             <span className="hidden sm:inline">{isPlaying ? "Pause" : "Play"}</span>
           </button>
         </div>
