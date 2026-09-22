@@ -52,40 +52,43 @@
     {
       "id": "beatles",
       "title": "Beatles Music",
-      "subtitle": "Android Kotlin Audio & TV Player",
+      "subtitle": "Android Audio & TV Player (APKPure)",
       "category": "Android Application",
       "price": 15000,
       "formattedPrice": "IDR 15.000",
-      "description": "Aplikasi pemutar musik Android canggih dengan sinkronisasi lirik real-time, audio equalizer, manajemen playlist, dan dukungan tampilan Beatles TV.",
+      "description": "Aplikasi pemutar musik Android canggih dengan sinkronisasi lirik real-time, audio equalizer, manajemen playlist, dan dukungan tampilan Beatles TV. Tersedia langsung di APKPure.",
       "features": [
         "Modern Android Architecture dengan Media3 / ExoPlayer",
+        "Tersedia resmi di APKPure (com.nanzbeatles.nanas)",
         "Dukungan Android TV & Auto UI layout",
         "Equalizer grafis & bass boost bawaan",
         "Offline playback & pencarian instan"
       ],
       "techStack": ["Kotlin", "ExoPlayer", "Room DB", "Jetpack Compose"],
       "logo": "/logos/beatles.png",
-      "apkUrl": "https://www.mediafire.com/file/wrdsd287jya8jwr/Beatles.apk/file",
+      "apkUrl": "https://apkpure.com/p/com.nanzbeatles.nanas",
       "badge": "POPULAR",
       "featured": true
     },
     {
       "id": "nanzmusify",
       "title": "NanzMusify",
-      "subtitle": "Interactive Web Music Player",
-      "category": "Web Application",
+      "subtitle": "Streaming & Offline Music App (APKPure)",
+      "category": "Android Application",
       "price": 10000,
       "formattedPrice": "IDR 10.000",
-      "description": "Platform pemutar musik berbasis web modern dengan streaming cepat, antarmuka responsif, visual spectrum, dan navigasi ramah mobile.",
+      "description": "Platform dan aplikasi pemutar musik modern dengan streaming cepat, visual spectrum antariksa, antarmuka responsif, dan tersedia di APKPure maupun web live.",
       "features": [
-        "Frontend responsif siap deploy Netlify/Vercel",
-        "Audio engine dengan Web Audio API",
+        "Tersedia versi Android APK di APKPure (com.nanzmusify.nanas)",
+        "Web audio engine & player responsif siap deploy",
         "Animasi pemutar musik fluid dan mulus",
         "Struktur kode modular dan mudah dikustomisasi"
       ],
-      "techStack": ["React", "JavaScript", "Tailwind CSS", "Web Audio"],
+      "techStack": ["Android", "React", "JavaScript", "Web Audio API"],
       "logo": "/logos/nanzmusify.png",
+      "apkUrl": "https://apkpure.com/p/com.nanzmusify.nanas",
       "demoUrl": "https://nanzz-music.netlify.app",
+      "badge": "UPDATED",
       "featured": true
     },
     {

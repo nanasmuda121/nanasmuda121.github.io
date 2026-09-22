@@ -1,5 +1,20 @@
 import type { Metadata, Viewport } from "next";
+import { Archivo_Black, Space_Mono } from "next/font/google";
 import "./globals.css";
+
+const archivo = Archivo_Black({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-display",
+  display: "swap",
+});
+
+const spaceMono = Space_Mono({
+  weight: ["400", "700"],
+  subsets: ["latin"],
+  variable: "--font-mono",
+  display: "swap",
+});
 
 export const viewport: Viewport = {
   themeColor: "#050507",
@@ -58,7 +73,9 @@ export default function RootLayout({
           href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>"
         />
       </head>
-      <body className="bg-[#050507] text-[#ededed] min-h-screen antialiased selection:bg-[#00f0ff] selection:text-[#050507]">
+      <body
+        className={`${archivo.variable} ${spaceMono.variable} bg-[#050507] text-[#ededed] min-h-screen antialiased selection:bg-[#00f0ff] selection:text-[#050507]`}
+      >
         {children}
       </body>
     </html>

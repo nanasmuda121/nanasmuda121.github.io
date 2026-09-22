@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { motion } from "framer-motion";
 import { ArrowUp } from "lucide-react";
 import { PORTFOLIO_DATA } from "@/data/portfolioData";
 import { playClickSound } from "@/utils/audio";
@@ -12,7 +13,13 @@ export default function Footer() {
   };
 
   return (
-    <footer className="border-t border-white/10 bg-[#06070a] py-12 px-4 sm:px-6 lg:px-8">
+    <motion.footer
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.8 }}
+      className="border-t border-white/10 bg-[#06070a] py-12 px-4 sm:px-6 lg:px-8"
+    >
       <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-5 font-mono text-xs sm:text-sm md:text-base text-zinc-400">
         <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 text-center sm:text-left">
           <span className="text-white font-bold">{PORTFOLIO_DATA.identity.fullName}</span>
@@ -39,6 +46,6 @@ export default function Footer() {
           </button>
         </div>
       </div>
-    </footer>
+    </motion.footer>
   );
 }

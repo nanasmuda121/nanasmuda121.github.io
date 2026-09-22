@@ -1,9 +1,12 @@
 "use client";
 
 import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import ProductCard3D from "@/components/ui/ProductCard3D";
 import { PORTFOLIO_DATA } from "@/data/portfolioData";
 import { playClickSound } from "@/utils/audio";
+
+const ease = [0.16, 1, 0.3, 1] as const;
 
 export default function ProductCatalog() {
   const [activeFilter, setActiveFilter] = useState<string>("ALL");
@@ -28,7 +31,13 @@ export default function ProductCatalog() {
   return (
     <section id="catalog" className="py-14 md:py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
       {/* Section Title & Filter Tabs */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 pb-6 border-b border-white/10 gap-6">
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-80px" }}
+        transition={{ duration: 0.7, ease }}
+        className="flex flex-col md:flex-row md:items-end justify-between mb-10 pb-6 border-b border-white/10 gap-6"
+      >
         <div>
           <div className="flex items-center gap-2.5 font-mono text-xs sm:text-sm md:text-base text-cyber-cyan mb-2">
             <span className="w-2 h-2 bg-cyber-cyan rounded-full animate-pulse" />
@@ -64,14 +73,29 @@ export default function ProductCatalog() {
             </button>
           ))}
         </div>
-      </div>
+      </motion.div>
 
       {/* Products Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-        {filteredProducts.map((product) => (
-          <ProductCard3D key={product.id} product={product} />
-        ))}
-      </div>
+      <motion.div
+        layout
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8"
+      >
+        <AnimatePresence mode="popLayout">
+          {filteredProducts.map((product, index) => (
+            <motion.div
+              key={product.id}
+              layout
+              initial={{ opacity: 0, y: 24, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.97, transition: { duration: 0.2 } }}
+              transition={{ duration: 0.45, ease, delay: index * 0.05 }}
+              whileHover={{ y: -4 }}
+            >
+              <ProductCard3D product={product} />
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </motion.div>
     </section>
   );
 }

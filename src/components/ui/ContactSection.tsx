@@ -1,10 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
+import { motion } from "framer-motion";
 import { MessageCircle, Phone, Copy, Check, ShieldCheck, HelpCircle } from "lucide-react";
 import { PORTFOLIO_DATA } from "@/data/portfolioData";
 import { playClickSound, playSuccessSound } from "@/utils/audio";
 import confetti from "canvas-confetti";
+
+const ease = [0.16, 1, 0.3, 1] as const;
 
 export default function ContactSection() {
   const [copied, setCopied] = useState(false);
@@ -44,7 +47,13 @@ export default function ContactSection() {
   return (
     <section id="faq" className="py-14 md:py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-14">
       {/* Contact Card */}
-      <div className="rounded-3xl bg-[#060814]/90 backdrop-blur-2xl border border-white/10 p-8 sm:p-12 md:p-16 shadow-2xl hover:border-cyber-cyan/30 transition-all">
+      <motion.div
+        initial={{ opacity: 0, y: 28 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-80px" }}
+        transition={{ duration: 0.7, ease }}
+        className="rounded-3xl bg-[#060814]/90 backdrop-blur-2xl border border-white/10 p-8 sm:p-12 md:p-16 shadow-2xl hover:border-cyber-cyan/30 transition-all"
+      >
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
           <div className="lg:col-span-7 space-y-5">
             <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 font-mono text-xs sm:text-sm md:text-base text-emerald-400">
@@ -109,19 +118,29 @@ export default function ContactSection() {
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* FAQ Section */}
       <div className="space-y-6 sm:space-y-8">
-        <div className="flex items-center gap-2.5 font-mono text-xs sm:text-sm md:text-base text-cyber-cyan">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.6, ease }}
+          className="flex items-center gap-2.5 font-mono text-xs sm:text-sm md:text-base text-cyber-cyan"
+        >
           <HelpCircle className="w-5 h-5" />
           <span className="font-bold tracking-wider">PERTANYAAN UMUM (FAQ)</span>
-        </div>
+        </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
           {faqs.map((faq, idx) => (
-            <div
+            <motion.div
               key={idx}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{ duration: 0.5, ease, delay: idx * 0.05 }}
               className="p-6 sm:p-7 md:p-8 rounded-2xl bg-[#060814]/90 border border-white/10 space-y-2.5 hover:border-cyber-cyan/35 transition-all shadow-lg"
             >
               <h4 className="text-base sm:text-lg md:text-xl font-bold text-white tracking-tight leading-snug">
@@ -130,7 +149,7 @@ export default function ContactSection() {
               <p className="text-xs sm:text-sm md:text-base text-zinc-300 leading-relaxed font-normal">
                 {faq.a}
               </p>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>

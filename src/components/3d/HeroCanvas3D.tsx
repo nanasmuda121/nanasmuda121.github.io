@@ -106,8 +106,12 @@ export default function HeroCanvas3D() {
   const [isJoystickActive, setIsJoystickActive] = useState(false);
   const joystickBaseRef = useRef<HTMLDivElement>(null);
   const joystickTouchIdRef = useRef<number | null>(null);
+  const isTouchDraggingRef = useRef(false);
+  const keysPressedRef = useRef({ w: false, a: false, s: false, d: false });
+  const kbKnobRef = useRef({ x: 0, y: 0 });
 
   const handleJoystickStart = (clientX: number, clientY: number) => {
+    isTouchDraggingRef.current = true;
     const base = joystickBaseRef.current;
     if (!base) return;
     const rect = base.getBoundingClientRect();
@@ -155,6 +159,8 @@ export default function HeroCanvas3D() {
   };
 
   const handleJoystickEnd = () => {
+    isTouchDraggingRef.current = false;
+    kbKnobRef.current = { x: 0, y: 0 };
     setJoystickPos({ x: 0, y: 0 });
     setIsJoystickActive(false);
     rocketControlsRef.current.analogX = 0;
@@ -787,10 +793,10 @@ export default function HeroCanvas3D() {
     const onKeyDown = (e: KeyboardEvent) => {
       if (!isRocketModeRef.current) return;
       const key = e.code;
-      if (key === "KeyA" || key === "ArrowLeft") rocketControlsRef.current.turnLeft = true;
-      if (key === "KeyD" || key === "ArrowRight") rocketControlsRef.current.turnRight = true;
-      if (key === "KeyW" || key === "ArrowUp") rocketControlsRef.current.pitchUp = true;
-      if (key === "KeyS" || key === "ArrowDown") rocketControlsRef.current.pitchDown = true;
+      if (key === "KeyA" || key === "ArrowLeft") { keysPressedRef.current.a = true; e.preventDefault(); }
+      if (key === "KeyD" || key === "ArrowRight") { keysPressedRef.current.d = true; e.preventDefault(); }
+      if (key === "KeyW" || key === "ArrowUp") { keysPressedRef.current.w = true; e.preventDefault(); }
+      if (key === "KeyS" || key === "ArrowDown") { keysPressedRef.current.s = true; e.preventDefault(); }
       if (key === "Space") {
         e.preventDefault();
         rocketControlsRef.current.boost = true;
@@ -803,10 +809,10 @@ export default function HeroCanvas3D() {
     const onKeyUp = (e: KeyboardEvent) => {
       if (!isRocketModeRef.current) return;
       const key = e.code;
-      if (key === "KeyA" || key === "ArrowLeft") rocketControlsRef.current.turnLeft = false;
-      if (key === "KeyD" || key === "ArrowRight") rocketControlsRef.current.turnRight = false;
-      if (key === "KeyW" || key === "ArrowUp") rocketControlsRef.current.pitchUp = false;
-      if (key === "KeyS" || key === "ArrowDown") rocketControlsRef.current.pitchDown = false;
+      if (key === "KeyA" || key === "ArrowLeft") keysPressedRef.current.a = false;
+      if (key === "KeyD" || key === "ArrowRight") keysPressedRef.current.d = false;
+      if (key === "KeyW" || key === "ArrowUp") keysPressedRef.current.w = false;
+      if (key === "KeyS" || key === "ArrowDown") keysPressedRef.current.s = false;
       if (key === "Space") rocketControlsRef.current.boost = false;
       if (key === "KeyB" || key === "KeyX") rocketControlsRef.current.brake = false;
     };
@@ -1104,26 +1110,49 @@ export default function HeroCanvas3D() {
             respawnRocket();
           }
         } else {
-          // Flight steering with realistic analog joystick & keyboard support
+          // PC WASD drives Virtual Analog Joystick when not touch dragging
+          if (!isTouchDraggingRef.current) {
+            const keys = keysPressedRef.current;
+            let kx = (keys.d ? 1 : 0) - (keys.a ? 1 : 0);
+            let ky = (keys.s ? 1 : 0) - (keys.w ? 1 : 0);
+            const kLen = Math.hypot(kx, ky);
+            if (kLen > 1) {
+              kx /= kLen;
+              ky /= kLen;
+            }
+            const targetX = kx * 38;
+            const targetY = ky * 38;
+            kbKnobRef.current.x += (targetX - kbKnobRef.current.x) * 0.25;
+            kbKnobRef.current.y += (targetY - kbKnobRef.current.y) * 0.25;
+
+            const dist = Math.hypot(kbKnobRef.current.x, kbKnobRef.current.y);
+            if (dist > 0.3) {
+              rocketControlsRef.current.analogX = kbKnobRef.current.x / 38;
+              rocketControlsRef.current.analogY = -kbKnobRef.current.y / 38;
+              setJoystickPos({ x: kbKnobRef.current.x, y: kbKnobRef.current.y });
+              setIsJoystickActive(true);
+            } else if (kLen === 0 && (kbKnobRef.current.x !== 0 || kbKnobRef.current.y !== 0)) {
+              kbKnobRef.current.x = 0;
+              kbKnobRef.current.y = 0;
+              rocketControlsRef.current.analogX = 0;
+              rocketControlsRef.current.analogY = 0;
+              setJoystickPos({ x: 0, y: 0 });
+              setIsJoystickActive(false);
+            }
+          }
+
           const ctrl = rocketControlsRef.current;
           const turnSpeed = 0.048;
-
-          // Combine analog joystick (-1 to +1) with keyboard arrow/WASD buttons
-          let steerX = ctrl.analogX;
-          if (ctrl.turnLeft) steerX = -1.0;
-          if (ctrl.turnRight) steerX = 1.0;
-
-          let pitchY = ctrl.analogY;
-          if (ctrl.pitchDown) pitchY = -1.0;
-          if (ctrl.pitchUp) pitchY = 1.0;
+          const steerX = ctrl.analogX;
+          const pitchY = ctrl.analogY;
 
           // Apply analog yaw steering (left/right)
-          if (Math.abs(steerX) > 0.04) {
+          if (Math.abs(steerX) > 0.03) {
             rocketGroup.rotateOnAxis(new THREE.Vector3(0, 1, 0), -steerX * turnSpeed);
           }
 
           // Apply analog pitch steering (up/down)
-          if (Math.abs(pitchY) > 0.04) {
+          if (Math.abs(pitchY) > 0.03) {
             rocketGroup.rotateOnAxis(new THREE.Vector3(1, 0, 0), pitchY * turnSpeed * 0.75);
           }
 
@@ -1918,7 +1947,7 @@ export default function HeroCanvas3D() {
                   e.preventDefault();
                   rocketControlsRef.current.boost = false;
                 }}
-                className="px-3.5 py-2 sm:px-5 sm:py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-black font-black font-mono text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 active:scale-90 transition-all shadow-lg shadow-cyan-500/30 active:from-cyan-400 active:to-blue-500"
+                className="px-3.5 py-2 sm:px-5 sm:py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-black font-bold font-mono text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 active:scale-90 transition-all shadow-lg shadow-cyan-500/30 active:from-cyan-400 active:to-blue-500"
                 title="Tekan untuk Akselerasi Turbo Penuh"
               >
                 <Flame className="w-4 h-4 fill-current text-white animate-pulse" />

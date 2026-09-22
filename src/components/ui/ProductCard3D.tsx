@@ -61,7 +61,7 @@ export default function ProductCard3D({ product }: ProductCard3DProps) {
         {/* Price Box */}
         <div className="p-3.5 sm:p-4 rounded-2xl bg-white/[0.03] border border-white/5 flex items-center justify-between mb-4 sm:mb-5">
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl sm:text-3xl font-black font-mono text-white tracking-tight">
+            <span className="text-2xl sm:text-3xl font-bold font-mono text-white tracking-tight">
               {product.formattedPrice}
             </span>
             <span className="text-xs font-mono text-zinc-400">/ source code</span>
@@ -125,7 +125,7 @@ export default function ProductCard3D({ product }: ProductCard3DProps) {
               onClick={() => playClickSound()}
               className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-white/5 border border-white/10 text-zinc-200 hover:text-white hover:bg-white/10 font-bold transition-all"
             >
-              <span>Download APK</span>
+              <span>{product.apkUrl.includes("apkpure.com") ? "APKPure APK" : "Download APK"}</span>
               <Download className="w-4 h-4 text-emerald-400" />
             </a>
           )}

@@ -1,10 +1,13 @@
 "use client";
 
 import React from "react";
+import { motion } from "framer-motion";
 import HeroCanvas3D from "@/components/3d/HeroCanvas3D";
 import { PORTFOLIO_DATA } from "@/data/portfolioData";
 import { ArrowDown, MessageCircle, Sparkles, Check } from "lucide-react";
 import { playClickSound } from "@/utils/audio";
+
+const ease = [0.16, 1, 0.3, 1] as const;
 
 export default function HeroSection() {
   const identity = PORTFOLIO_DATA.identity;
@@ -12,7 +15,12 @@ export default function HeroSection() {
   return (
     <section className="relative pt-24 pb-12 md:pt-36 md:pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto overflow-hidden space-y-7 sm:space-y-9">
       {/* Top Telemetry Ribbon */}
-      <div className="flex items-center justify-between font-mono text-xs sm:text-sm md:text-base text-zinc-400 border-b border-white/10 pb-3.5">
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease }}
+        className="flex items-center justify-between font-mono text-xs sm:text-sm md:text-base text-zinc-400 border-b border-white/10 pb-3.5"
+      >
         <div className="flex items-center gap-2.5 sm:gap-3">
           <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
           <span className="text-white font-semibold tracking-wider">DEEP SPACE OBSERVATORY</span>
@@ -24,31 +32,57 @@ export default function HeroSection() {
           <span className="text-zinc-600">•</span>
           <span className="text-cyber-cyan font-semibold">FULL SOURCE CODE</span>
         </div>
-      </div>
+      </motion.div>
 
-      {/* Main Hero Header: Expansive, Bold & High-Impact Space Typography for PC & Mobile */}
+      {/* Main Hero Header */}
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 sm:gap-8">
         <div className="space-y-3 sm:space-y-4 max-w-4xl">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyan-500/10 border border-cyber-cyan/30 font-mono text-xs sm:text-sm md:text-base text-cyber-cyan">
-            <Sparkles className="w-4 h-4 text-cyber-cyan" />
-            <span className="font-semibold tracking-wide">ORBITAL SOURCE CODE &amp; DIGITAL PRODUCTS</span>
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease, delay: 0.05 }}
+          >
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyan-500/10 border border-cyber-cyan/30 font-mono text-xs sm:text-sm md:text-base text-cyber-cyan">
+              <Sparkles className="w-4 h-4 text-cyber-cyan" />
+              <span className="font-semibold tracking-wide">ORBITAL SOURCE CODE &amp; DIGITAL PRODUCTS</span>
+            </div>
+          </motion.div>
 
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight text-white leading-[1.05]">
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.65, ease, delay: 0.12 }}
+            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight text-white leading-[1.05]"
+          >
             {identity.fullName}
-          </h1>
+          </motion.h1>
 
-          <p className="text-xl sm:text-2xl md:text-3xl font-bold text-zinc-100 tracking-tight">
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.65, ease, delay: 0.2 }}
+            className="text-xl sm:text-2xl md:text-3xl font-bold text-zinc-100 tracking-tight"
+          >
             {identity.tagline}
-          </p>
+          </motion.p>
 
-          <p className="text-sm sm:text-base md:text-lg text-zinc-300 leading-relaxed font-normal pt-1 max-w-3xl">
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.65, ease, delay: 0.28 }}
+            className="text-sm sm:text-base md:text-lg text-zinc-300 leading-relaxed font-normal pt-1 max-w-3xl"
+          >
             {identity.description}
-          </p>
+          </motion.p>
         </div>
 
         {/* Action CTAs */}
-        <div className="flex flex-wrap sm:flex-nowrap items-center gap-3.5 flex-shrink-0 font-mono text-xs sm:text-sm md:text-base">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.65, ease, delay: 0.36 }}
+          className="flex flex-wrap sm:flex-nowrap items-center gap-3.5 flex-shrink-0 font-mono text-xs sm:text-sm md:text-base"
+        >
           <a
             href="#catalog"
             onClick={() => playClickSound()}
@@ -68,11 +102,16 @@ export default function HeroSection() {
             <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5" />
             <span>Hubungi WhatsApp</span>
           </a>
-        </div>
+        </motion.div>
       </div>
 
       {/* Guarantee Badges Ribbon */}
-      <div className="flex flex-wrap items-center gap-4 sm:gap-8 pt-1 pb-1 font-mono text-xs sm:text-sm md:text-base text-zinc-300">
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease, delay: 0.44 }}
+        className="flex flex-wrap items-center gap-4 sm:gap-8 pt-1 pb-1 font-mono text-xs sm:text-sm md:text-base text-zinc-300"
+      >
         {(identity.guarantees || ["Full Source Code", "Siap Build APK/Web", "Fast Response WA"]).map(
           (g) => (
             <div key={g} className="flex items-center gap-2 sm:gap-2.5">
@@ -81,12 +120,17 @@ export default function HeroSection() {
             </div>
           )
         )}
-      </div>
+      </motion.div>
 
       {/* Centerpiece: Full-Width 3D Solar System Experience */}
-      <div className="w-full pt-1">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.985 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.8, ease, delay: 0.35 }}
+        className="w-full pt-1"
+      >
         <HeroCanvas3D />
-      </div>
+      </motion.div>
     </section>
   );
 }
