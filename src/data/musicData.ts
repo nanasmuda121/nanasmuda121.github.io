@@ -8,6 +8,7 @@ export interface Artist {
   topTracks: string[];
   link: string;
   linkText: string;
+  videoId?: string;
 }
 
 export interface FavoriteTrack {
@@ -17,6 +18,8 @@ export interface FavoriteTrack {
   album?: string;
   duration?: string;
   genre?: string;
+  cover?: string;
+  videoId?: string;
 }
 
 export const FAVORITE_ARTISTS: Artist[] = [
@@ -31,6 +34,7 @@ export const FAVORITE_ARTISTS: Artist[] = [
     topTracks: ["Fuck Love", "SAD!", "Jocelyn Flores", "Changes"],
     link: "https://www.xxxtentacion.com",
     linkText: "xxxtentacion.com",
+    videoId: "JcWOSgImiRw",
   },
   {
     id: "juicewrld",
@@ -38,11 +42,12 @@ export const FAVORITE_ARTISTS: Artist[] = [
     genre: "Emo Rap / Melodic Trap",
     image: "/artists/juicewrld.jpg",
     description:
-      "Fasih ngerap dan nge-sing dengan nada yang sama naturalnya. Sibuk luuahan emosi soal cinta, obat, dan mental health yang bikin banyak orang ngerasa dipahami.",
+      "Fasih ngerap dan nge-sing dengan nada yang sama naturalnya. Sibuk luahan emosi soal cinta, obat, dan mental health yang bikin banyak orang ngerasa dipahami.",
     highlightSong: "Lucid Dreams",
     topTracks: ["Lucid Dreams", "All Girls Are the Same", "Wasted", "Lean Wit Me"],
     link: "https://juicewrld999.com",
     linkText: "juicewrld999.com",
+    videoId: "mzB1VGEGcSU",
   },
   {
     id: "kanyewest",
@@ -55,6 +60,7 @@ export const FAVORITE_ARTISTS: Artist[] = [
     topTracks: ["True Love", "Stronger", "Heartless", "POWER"],
     link: "https://www.kanyewest.com",
     linkText: "kanyewest.com",
+    videoId: "k7H2C5L8X7I",
   },
   {
     id: "biggiesmalls",
@@ -62,7 +68,7 @@ export const FAVORITE_ARTISTS: Artist[] = [
     genre: "East Coast / Golden Era",
     image: "/artists/biggiesmalls.jpg",
     description:
-      "Biggie bawa flow santai tapi penuh karakter yang jadi standar rap East Coast 90-an. Cara dia bercerita soal jalanan dan Jakarta-nya hidup itu beda sendiri.",
+      "Biggie bawa flow santai tapi penuh karakter yang jadi standar rap East Coast 90-an. Cara dia bercerita soal jalanan itu beda sendiri dan ngerasa hidup setiap didengerin.",
     highlightSong: "Juicy",
     topTracks: ["Juicy", "Big Poppa", "Hypnotize", "Mo Money Mo Problems"],
     link: "https://www.notoriousbig.com",
@@ -79,6 +85,7 @@ export const FAVORITE_ARTISTS: Artist[] = [
     topTracks: ["Boyz-n-the-Hood", "Eazy-Duz-It", "Real Muthaphuckkin G's", "Ruthless Villain"],
     link: "https://en.wikipedia.org/wiki/Eazy-E",
     linkText: "Eazy-E • Wikipedia",
+    videoId: "PIU07K_28ck",
   },
   {
     id: "tupac",
@@ -91,6 +98,7 @@ export const FAVORITE_ARTISTS: Artist[] = [
     topTracks: ["Changes", "Dear Mama", "California Love", "Hail Mary"],
     link: "https://en.wikipedia.org/wiki/Tupac_Shakur",
     linkText: "2Pac • Wikipedia",
+    videoId: "eXvBjCO19QY",
   },
   {
     id: "hindia",
@@ -98,11 +106,12 @@ export const FAVORITE_ARTISTS: Artist[] = [
     genre: "Indie Pop / Alternative",
     image: "/artists/hindia.jpg",
     description:
-      "Musisi dan penulis lirik asal Jakarta. Tulisannya tajam, introspektif, dan jujur soal hidup di generasi sekarang — cocok banget buat teman begadang.",
+      "Musisi dan penulis lirik asal Jakarta. Tulisannya tajam, introspektif, dan jujur soal hidup di generasi sekarang — pas banget buat teman begadang.",
     highlightSong: "everything u are",
     topTracks: ["everything u are", "Secukupnya", "Evaluasi", "Membasuh"],
     link: "https://www.instagram.com/wordfangs",
     linkText: "@wordfangs",
+    videoId: "lB8ASupNtlw",
   },
 ];
 
@@ -114,6 +123,8 @@ export const FAVORITE_TRACKS: FavoriteTrack[] = [
     album: "?",
     duration: "2:27",
     genre: "Emo Rap",
+    cover: "/artists/xxxtentacion.jpg",
+    videoId: "JcWOSgImiRw",
   },
   {
     id: "track-2",
@@ -122,6 +133,8 @@ export const FAVORITE_TRACKS: FavoriteTrack[] = [
     album: "Donda 2",
     duration: "2:40",
     genre: "Hip-Hop",
+    cover: "/artists/kanyewest.jpg",
+    videoId: "k7H2C5L8X7I",
   },
   {
     id: "track-3",
@@ -129,14 +142,16 @@ export const FAVORITE_TRACKS: FavoriteTrack[] = [
     artist: "Juice WRLD",
     duration: "2:29",
     genre: "Emo Rap",
+    cover: "/artists/juicewrld.jpg",
   },
   {
     id: "track-4",
     title: "We Know How We Do It",
-    artist: "Curated Local Favorites",
-    album: "Satu Frekuensi",
+    artist: "Satu Frekuensi",
+    album: "Local Favorites",
     duration: "3:00",
     genre: "Hip-Hop",
+    cover: "/artists/tupac.jpg",
   },
   {
     id: "track-5",
@@ -145,6 +160,8 @@ export const FAVORITE_TRACKS: FavoriteTrack[] = [
     album: "Eazy-Duz-It",
     duration: "5:35",
     genre: "West Coast",
+    cover: "/artists/eazye.jpg",
+    videoId: "PIU07K_28ck",
   },
   {
     id: "track-6",
@@ -153,6 +170,8 @@ export const FAVORITE_TRACKS: FavoriteTrack[] = [
     album: "Doves, '25 on Blank Canvas",
     duration: "3:56",
     genre: "Indie Pop",
+    cover: "/artists/hindia.jpg",
+    videoId: "lB8ASupNtlw",
   },
   {
     id: "track-7",
@@ -161,5 +180,7 @@ export const FAVORITE_TRACKS: FavoriteTrack[] = [
     album: "Still I Rise",
     duration: "4:30",
     genre: "Hip-Hop",
+    cover: "/artists/tupac.jpg",
+    videoId: "eXvBjCO19QY",
   },
 ];
