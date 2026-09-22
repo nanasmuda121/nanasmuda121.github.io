@@ -2,7 +2,7 @@ export interface CelestialBody {
   id: string;
   name: string;
   tagline: string;
-  type: "Bintang" | "Planet Terestrial" | "Raksasa Gas" | "Raksasa Es";
+  type: "Bintang" | "Planet Terestrial" | "Raksasa Gas" | "Raksasa Es" | "Satelit Alami";
   size: number;
   distance: number;
   speed: number;
@@ -31,6 +31,33 @@ export interface CelestialBody {
   funFact: string;
   description: string;
 }
+
+export const MOON_DATA: CelestialBody = {
+  id: "bulan",
+  name: "Bulan (Luna)",
+  tagline: "Satelit Alami Penjaga Keseimbangan Poros Bumi",
+  type: "Satelit Alami",
+  size: 0.1,
+  distance: 0.5,
+  speed: 0.045,
+  texturePath: "/textures/planets/moon.jpg",
+  fallbackColor: 0xd1d5db,
+  diameter: "3.474 km (0,27 kali Bumi)",
+  mass: "7,342 × 10²² kg (0,012 kali Bumi)",
+  distanceFromSun: "149,6 Juta km (Mengorbit Bumi pada jarak 384.400 km)",
+  gravity: "1,62 m/s² (0,166g — 1/6 gravitasi Bumi)",
+  escapeVelocity: "2,38 km/s",
+  orbitalVelocity: "1,022 km/s (Mengitari Bumi)",
+  orbitalPeriod: "27,32 Hari Bumi (Bulan Sideris)",
+  rotationPeriod: "27,32 Hari Bumi (Terkunci Pasang Surut)",
+  axialTilt: "1,54° terhadap ekliptika",
+  temperature: "Siang: +120°C | Malam: -130°C (Kutub: -246°C)",
+  atmosphere: "Hampir vakum sempurna (Eksosfer tipis jejak Helium & Neon)",
+  moonsCount: "0 (Merupakan Satelit dari Bumi)",
+  majorMoons: [],
+  funFact: "Kenapa Bulan bukan planet? Karena secara definisi resmi astronomi internasional (IAU), sebuah planet harus mengorbit Matahari secara langsung. Bulan mengorbit Bumi, sehingga diklasifikasikan sebagai Satelit Alami. Bulan mengalami 'Tidal Locking' (rotasi sama dengan revolusinya), sehingga sisi yang menghadap Bumi selalu sama persis!",
+  description: "Satelit alami terbesar kelima di Tata Surya. Tarikan gravitasinya menciptakan pasang surut air laut dan menstabilkan kemiringan sumbu rotasi Bumi, menjaga stabilitas iklim yang memungkinkan kehidupan berkembang.",
+};
 
 export const SUN_DATA: CelestialBody = {
   id: "matahari",

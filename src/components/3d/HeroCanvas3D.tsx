@@ -6,6 +6,7 @@ import { playClickSound, playWhooshSound, playBlipSound } from "@/utils/audio";
 import {
   CELESTIAL_BODIES,
   SUN_DATA,
+  MOON_DATA,
   CelestialBody,
 } from "@/data/solarSystemData";
 import {
@@ -35,6 +36,8 @@ interface PlanetNode {
   mesh: THREE.Mesh;
   sprite: THREE.Sprite;
   moonGroup?: THREE.Group;
+  moonMesh?: THREE.Mesh;
+  moonSprite?: THREE.Sprite;
 }
 
 export default function HeroCanvas3D() {
@@ -313,20 +316,32 @@ export default function HeroCanvas3D() {
 
       // Earth's Moon
       let moonGroup: THREE.Group | undefined;
+      let moonMesh: THREE.Mesh | undefined;
+      let moonSprite: THREE.Sprite | undefined;
+
       if (body.hasMoon && body.moonTexturePath) {
         moonGroup = new THREE.Group();
         pMesh.add(moonGroup);
 
         const moonTexture = textureLoader.load(body.moonTexturePath);
-        const moonGeo = new THREE.SphereGeometry(0.068, 16, 16);
+        const moonGeo = new THREE.SphereGeometry(0.075, 16, 16);
         const moonMat = new THREE.MeshStandardMaterial({
           map: moonTexture,
           color: 0xd1d5db,
           roughness: 0.85,
         });
-        const moonMesh = new THREE.Mesh(moonGeo, moonMat);
-        moonMesh.position.x = 0.5;
+        moonMesh = new THREE.Mesh(moonGeo, moonMat);
+        moonMesh.position.x = 0.52;
+        moonMesh.userData = { body: MOON_DATA };
         moonGroup.add(moonMesh);
+
+        moonSprite = createNameSprite(MOON_DATA.name, 0xd1d5db);
+        moonSprite.scale.set(1.15, 0.28, 1);
+        moonSprite.position.set(0, 0.22, 0);
+        moonSprite.userData = { body: MOON_DATA };
+        moonMesh.add(moonSprite);
+
+        clickableObjects.push(moonMesh, moonSprite);
       }
 
       // Initial Angle
@@ -339,6 +354,8 @@ export default function HeroCanvas3D() {
         mesh: pMesh,
         sprite: pSprite,
         moonGroup,
+        moonMesh,
+        moonSprite,
       });
     });
 
@@ -561,25 +578,26 @@ export default function HeroCanvas3D() {
         let focusedMesh: THREE.Object3D | null = null;
         if (activeSelected.id === "matahari") {
           focusedMesh = sunMesh;
+        } else if (activeSelected.id === "bulan") {
+          const earthNode = planetNodes.find((n) => n.body.id === "bumi");
+          if (earthNode && earthNode.moonMesh) {
+            focusedMesh = earthNode.moonMesh;
+          }
         } else {
           const found = planetNodes.find((n) => n.body.id === activeSelected.id);
           if (found) focusedMesh = found.mesh;
         }
 
         if (focusedMesh) {
-          // 1. Get real-time moving world position of the planet
+          // 1. Get real-time moving world position of the body
           focusedMesh.getWorldPosition(targetWorldPos);
 
-          // Calibrated zoom distances:
-          // - Large bodies (Matahari, Jupiter, Saturnus) are NOT too zoomed in / kept at comfortable distances
-          // - Small planets (Merkurius, Mars) are zoomed in enough to see surface features without being oversized
-          // - Bumi is framed together with its orbiting Moon
-          // - Saturnus & Uranus include full clearance for their 3D ring systems
           const ZOOM_DISTANCES: Record<string, number> = {
             matahari: 5.2,
             merkurius: 1.25,
             venus: 1.65,
             bumi: 1.95,
+            bulan: 0.88,
             mars: 1.45,
             jupiter: 3.6,
             saturnus: 5.4,
@@ -589,53 +607,63 @@ export default function HeroCanvas3D() {
 
           const zoomDistance = ZOOM_DISTANCES[activeSelected.id] ?? (activeSelected.size * 3.5 + 1.2);
 
-          // 2. Dynamic formation flight camera position following the orbiting planet
-          if (activeSelected.id === "matahari") {
-            desiredCameraPos.set(
-              targetWorldPos.x + zoomDistance * 0.72,
-              targetWorldPos.y + zoomDistance * 0.38,
-              targetWorldPos.z + zoomDistance * 1.15
-            );
-          } else {
-            // Calculate orbital tangent and radial vector for cinematic following angle
-            const radius = Math.hypot(targetWorldPos.x, targetWorldPos.z);
-            const radialX = radius > 0.01 ? targetWorldPos.x / radius : 1;
-            const radialZ = radius > 0.01 ? targetWorldPos.z / radius : 0;
-            const tangentX = -radialZ;
-            const tangentZ = radialX;
+          // 2. Analytical Orbital Direction (Zero Lag, Zero Jitter)
+          const distToCenter = Math.hypot(targetWorldPos.x, targetWorldPos.z);
+          const radX = distToCenter > 0.01 ? targetWorldPos.x / distToCenter : 1;
+          const radZ = distToCenter > 0.01 ? targetWorldPos.z / distToCenter : 0;
+          const tanX = -radZ;
+          const tanZ = radX;
 
-            desiredCameraPos.set(
-              targetWorldPos.x - tangentX * (zoomDistance * 0.85) + radialX * (zoomDistance * 0.42),
-              targetWorldPos.y + zoomDistance * 0.35,
-              targetWorldPos.z - tangentZ * (zoomDistance * 0.85) + radialZ * (zoomDistance * 0.42)
-            );
+          let baseCamX: number;
+          let baseCamY: number;
+          let baseCamZ: number;
+
+          if (activeSelected.id === "matahari") {
+            baseCamX = targetWorldPos.x + zoomDistance * 0.72;
+            baseCamY = targetWorldPos.y + zoomDistance * 0.38;
+            baseCamZ = targetWorldPos.z + zoomDistance * 1.15;
+          } else {
+            baseCamX = targetWorldPos.x - tanX * (zoomDistance * 0.85) + radX * (zoomDistance * 0.42);
+            baseCamY = targetWorldPos.y + zoomDistance * 0.35;
+            baseCamZ = targetWorldPos.z - tanZ * (zoomDistance * 0.85) + radZ * (zoomDistance * 0.42);
           }
+
+          // Compute horizontal perpendicular vector analytically (zero jitter)
+          const forwardX = targetWorldPos.x - baseCamX;
+          const forwardZ = targetWorldPos.z - baseCamZ;
+          const fwdLen = Math.hypot(forwardX, forwardZ) || 1;
+          const rightX = -forwardZ / fwdLen;
+          const rightZ = forwardX / fwdLen;
+
+          // 3. Subtle Organic Wave Effect (ombak naik-turun dan sedikit kiri-bawah sangat lembut):
+          const waveTime = performance.now() * 0.0012;
+          const waveUp = Math.sin(waveTime) * 0.015 * zoomDistance;
+          const waveSide = Math.cos(waveTime * 0.8) * 0.013 * zoomDistance;
+          const waveDrop = (Math.sin(waveTime * 0.9) - 0.4) * 0.007 * zoomDistance;
+
+          desiredCameraPos.set(
+            baseCamX + rightX * waveSide,
+            baseCamY + waveUp + waveDrop,
+            baseCamZ + rightZ * waveSide
+          );
 
           if (!isNaN(desiredCameraPos.x)) {
-            camera.position.lerp(desiredCameraPos, 0.08);
+            camera.position.lerp(desiredCameraPos, 0.12);
           }
 
-          // 3. FRAME THE PLANET NATURALLY ON THE LEFT (around 30%-35% from left edge, avoiding extreme edges):
-          const camForward = new THREE.Vector3()
-            .subVectors(targetWorldPos, camera.position)
-            .normalize();
-          const camRight = new THREE.Vector3()
-            .crossVectors(camForward, camera.up)
-            .normalize();
-
-          if (camRight.lengthSq() < 0.001) {
-            camRight.set(1, 0, 0);
-          }
-
-          // Moderate shift factor: planet sits comfortably in the left half with plenty of breathing room
+          // 4. Natural left-side framing (around 30%-35% from left edge)
           const isWideView = (canvasHolder.clientWidth || window.innerWidth) > 768;
-          const shiftFactor = isWideView ? 0.38 : 0.22;
-          const shiftOffset = camRight.clone().multiplyScalar(zoomDistance * shiftFactor);
+          const shiftFactor = isWideView ? 0.35 : 0.20;
+          const shiftDist = zoomDistance * shiftFactor;
 
-          lookTarget.copy(targetWorldPos).add(shiftOffset);
+          lookTarget.set(
+            targetWorldPos.x + rightX * shiftDist + rightX * (waveSide * 0.25),
+            targetWorldPos.y + waveUp * 0.25,
+            targetWorldPos.z + rightZ * shiftDist + rightZ * (waveSide * 0.25)
+          );
 
           if (!isNaN(lookTarget.x)) {
-            currentLookAt.lerp(lookTarget, 0.08);
+            currentLookAt.lerp(lookTarget, 0.12);
             camera.lookAt(currentLookAt);
           }
         }
@@ -674,8 +702,14 @@ export default function HeroCanvas3D() {
     };
   }, []);
 
-  // Navigation handlers
-  const allBodies = [SUN_DATA, ...CELESTIAL_BODIES];
+  // Navigation handlers: insert Bulan (Luna) right after Bumi
+  const earthIndex = CELESTIAL_BODIES.findIndex((b) => b.id === "bumi");
+  const allBodies = [
+    SUN_DATA,
+    ...CELESTIAL_BODIES.slice(0, earthIndex + 1),
+    MOON_DATA,
+    ...CELESTIAL_BODIES.slice(earthIndex + 1),
+  ];
 
   const handleSelectBody = (body: CelestialBody | null) => {
     focusPlanetRef.current(body);
