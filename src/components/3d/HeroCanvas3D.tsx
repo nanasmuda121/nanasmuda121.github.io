@@ -38,7 +38,8 @@ interface PlanetNode {
 }
 
 export default function HeroCanvas3D() {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const canvasHolderRef = useRef<HTMLDivElement>(null);
 
   // Active / Focused planet state
   const [selectedBody, setSelectedBody] = useState<CelestialBody | null>(null);
@@ -62,19 +63,19 @@ export default function HeroCanvas3D() {
   // External trigger for focusing from React buttons
   const focusPlanetRef = useRef<(body: CelestialBody | null) => void>(() => {});
 
-  // Fullscreen and Landscape toggle
+  // Fullscreen and Landscape toggle for Android & Mobile
   const toggleFullscreen = async () => {
-    const container = containerRef.current;
-    if (!container) return;
+    const wrapper = wrapperRef.current;
+    if (!wrapper) return;
 
     playClickSound();
 
     if (!document.fullscreenElement) {
       try {
-        if (container.requestFullscreen) {
-          await container.requestFullscreen();
-        } else if ((container as unknown as { webkitRequestFullscreen?: () => Promise<void> }).webkitRequestFullscreen) {
-          await (container as unknown as { webkitRequestFullscreen: () => Promise<void> }).webkitRequestFullscreen();
+        if (wrapper.requestFullscreen) {
+          await wrapper.requestFullscreen();
+        } else if ((wrapper as unknown as { webkitRequestFullscreen?: () => Promise<void> }).webkitRequestFullscreen) {
+          await (wrapper as unknown as { webkitRequestFullscreen: () => Promise<void> }).webkitRequestFullscreen();
         }
 
         // Try locking orientation to landscape (Android Chrome / Mobile)
@@ -125,15 +126,18 @@ export default function HeroCanvas3D() {
   }, []);
 
   useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
+    const canvasHolder = canvasHolderRef.current;
+    if (!canvasHolder) return;
 
     // --- Scene, Camera, Renderer ---
     const scene = new THREE.Scene();
 
+    const initialWidth = canvasHolder.clientWidth || 600;
+    const initialHeight = canvasHolder.clientHeight || 450;
+
     const camera = new THREE.PerspectiveCamera(
       45,
-      container.clientWidth / container.clientHeight,
+      initialWidth / initialHeight,
       0.1,
       1000
     );
@@ -145,12 +149,17 @@ export default function HeroCanvas3D() {
       alpha: true,
       powerPreference: "high-performance",
     });
-    renderer.setSize(container.clientWidth, container.clientHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    container.appendChild(renderer.domElement);
+    renderer.setSize(initialWidth, initialHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+
+    // Clear holder & mount canvas
+    while (canvasHolder.firstChild) {
+      canvasHolder.removeChild(canvasHolder.firstChild);
+    }
+    canvasHolder.appendChild(renderer.domElement);
 
     // --- Lighting ---
-    const ambientLight = new THREE.AmbientLight(0x333b52, 1.3);
+    const ambientLight = new THREE.AmbientLight(0x444d6a, 1.4);
     scene.add(ambientLight);
 
     const sunPointLight = new THREE.PointLight(0xffffff, 4.5, 200, 0.35);
@@ -253,7 +262,7 @@ export default function HeroCanvas3D() {
       const trackMat = new THREE.LineBasicMaterial({
         color: 0xffffff,
         transparent: true,
-        opacity: 0.14,
+        opacity: 0.16,
       });
       const trackLine = new THREE.Line(trackGeo, trackMat);
       solarGroup.add(trackLine);
@@ -492,22 +501,24 @@ export default function HeroCanvas3D() {
       }
     };
 
-    container.addEventListener("mousedown", onPointerDown);
+    canvasHolder.addEventListener("mousedown", onPointerDown);
     window.addEventListener("mousemove", onPointerMove);
     window.addEventListener("mouseup", onPointerUp);
 
-    container.addEventListener("touchstart", onTouchStart, { passive: true });
+    canvasHolder.addEventListener("touchstart", onTouchStart, { passive: true });
     window.addEventListener("touchmove", onTouchMove, { passive: true });
     window.addEventListener("touchend", onTouchEnd);
 
     // Resize Handler
     const onResize = () => {
-      if (!container) return;
-      const width = container.clientWidth || window.innerWidth;
-      const height = container.clientHeight || window.innerHeight;
-      camera.aspect = width / height;
-      camera.updateProjectionMatrix();
-      renderer.setSize(width, height);
+      if (!canvasHolder) return;
+      const width = canvasHolder.clientWidth || window.innerWidth;
+      const height = canvasHolder.clientHeight || window.innerHeight;
+      if (width > 0 && height > 0) {
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+        renderer.setSize(width, height);
+      }
     };
     window.addEventListener("resize", onResize);
 
@@ -573,11 +584,9 @@ export default function HeroCanvas3D() {
             const radius = Math.hypot(targetWorldPos.x, targetWorldPos.z);
             const radialX = radius > 0.01 ? targetWorldPos.x / radius : 1;
             const radialZ = radius > 0.01 ? targetWorldPos.z / radius : 0;
-            // Tangent along orbit direction
             const tangentX = -radialZ;
             const tangentZ = radialX;
 
-            // Camera trails slightly behind and elevated, looking down-tangent
             desiredCameraPos.set(
               targetWorldPos.x - tangentX * (zoomDistance * 0.9) + radialX * (zoomDistance * 0.5),
               targetWorldPos.y + zoomDistance * 0.45,
@@ -585,11 +594,11 @@ export default function HeroCanvas3D() {
             );
           }
 
-          // Smoothly interpolate camera position
-          camera.position.lerp(desiredCameraPos, 0.08);
+          if (!isNaN(desiredCameraPos.x)) {
+            camera.position.lerp(desiredCameraPos, 0.08);
+          }
 
           // 3. FRAME THE PLANET ON THE LEFT SIDE OF THE SCREEN:
-          // We calculate the camera's local right vector:
           const camForward = new THREE.Vector3()
             .subVectors(targetWorldPos, camera.position)
             .normalize();
@@ -597,16 +606,21 @@ export default function HeroCanvas3D() {
             .crossVectors(camForward, camera.up)
             .normalize();
 
-          // Shift look-at target to the RIGHT by an offset proportional to view width
-          const isWideView = (container.clientWidth || window.innerWidth) > 768;
-          const shiftFactor = isWideView ? 0.62 : 0.35;
-          const shiftOffset = camRight.multiplyScalar(zoomDistance * shiftFactor);
+          if (camRight.lengthSq() < 0.001) {
+            camRight.set(1, 0, 0);
+          }
 
-          // Look target is offset to the right => planet is rendered on the LEFT
+          // Shift look-at target to the RIGHT by an offset proportional to view width
+          const isWideView = (canvasHolder.clientWidth || window.innerWidth) > 768;
+          const shiftFactor = isWideView ? 0.62 : 0.35;
+          const shiftOffset = camRight.clone().multiplyScalar(zoomDistance * shiftFactor);
+
           lookTarget.copy(targetWorldPos).add(shiftOffset);
 
-          currentLookAt.lerp(lookTarget, 0.08);
-          camera.lookAt(currentLookAt);
+          if (!isNaN(lookTarget.x)) {
+            currentLookAt.lerp(lookTarget, 0.08);
+            camera.lookAt(currentLookAt);
+          }
         }
       } else {
         // Global Overview Mode: Interactive 360° Drag
@@ -625,19 +639,19 @@ export default function HeroCanvas3D() {
     animate();
 
     return () => {
-      container.removeEventListener("mousedown", onPointerDown);
+      canvasHolder.removeEventListener("mousedown", onPointerDown);
       window.removeEventListener("mousemove", onPointerMove);
       window.removeEventListener("mouseup", onPointerUp);
 
-      container.removeEventListener("touchstart", onTouchStart);
+      canvasHolder.removeEventListener("touchstart", onTouchStart);
       window.removeEventListener("touchmove", onTouchMove);
       window.removeEventListener("touchend", onTouchEnd);
 
       window.removeEventListener("resize", onResize);
       cancelAnimationFrame(animId);
 
-      if (container.contains(renderer.domElement)) {
-        container.removeChild(renderer.domElement);
+      if (canvasHolder.contains(renderer.domElement)) {
+        canvasHolder.removeChild(renderer.domElement);
       }
       renderer.dispose();
     };
@@ -672,16 +686,17 @@ export default function HeroCanvas3D() {
 
   return (
     <div
-      ref={containerRef}
+      ref={wrapperRef}
       className={`relative select-none overflow-hidden transition-all duration-300 ${
         isFullscreen
           ? "fixed inset-0 z-[9999] w-screen h-screen bg-[#030407]"
           : "w-full h-[480px] sm:h-[540px] md:h-[600px] rounded-2xl bg-[#040508] border border-white/10 shadow-2xl"
       }`}
     >
-      {/* 3D WebGL Canvas */}
+      {/* 3D WebGL Canvas Container: absolute inset-0 guarantees it always fills 100% of the box */}
       <div
-        className={`w-full h-full cursor-grab ${isDragging ? "cursor-grabbing" : ""}`}
+        ref={canvasHolderRef}
+        className={`absolute inset-0 w-full h-full cursor-grab ${isDragging ? "cursor-grabbing" : ""}`}
         title="Klik planet untuk zoom & ikuti orbitnya, atau putar 360°"
       />
 
@@ -695,7 +710,7 @@ export default function HeroCanvas3D() {
 
       {/* Top Right Controls: Fullscreen Landscape + Reset */}
       <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
-        {/* Fullscreen Landscape Toggle (Especially optimized for Android) */}
+        {/* Fullscreen Landscape Toggle */}
         <button
           onClick={toggleFullscreen}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-black/80 hover:bg-white/15 text-white backdrop-blur-md border border-white/20 font-mono text-xs font-semibold transition-all active:scale-95 shadow-lg"
