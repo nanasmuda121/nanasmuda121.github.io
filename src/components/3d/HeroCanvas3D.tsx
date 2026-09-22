@@ -97,7 +97,123 @@ export default function HeroCanvas3D() {
     pitchDown: false,
     boost: false,
     brake: false,
+    analogX: 0,
+    analogY: 0,
   });
+
+  // Virtual Analog Joystick states
+  const [joystickPos, setJoystickPos] = useState({ x: 0, y: 0 });
+  const [isJoystickActive, setIsJoystickActive] = useState(false);
+  const joystickBaseRef = useRef<HTMLDivElement>(null);
+  const joystickTouchIdRef = useRef<number | null>(null);
+
+  const handleJoystickStart = (clientX: number, clientY: number) => {
+    const base = joystickBaseRef.current;
+    if (!base) return;
+    const rect = base.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+
+    const dx = clientX - centerX;
+    const dy = clientY - centerY;
+    const dist = Math.hypot(dx, dy);
+    const maxRadius = 38;
+
+    const clampedDist = Math.min(dist, maxRadius);
+    const angle = Math.atan2(dy, dx);
+    const knobX = Math.cos(angle) * clampedDist;
+    const knobY = Math.sin(angle) * clampedDist;
+
+    setJoystickPos({ x: knobX, y: knobY });
+    setIsJoystickActive(true);
+
+    rocketControlsRef.current.analogX = knobX / maxRadius;
+    rocketControlsRef.current.analogY = -knobY / maxRadius;
+  };
+
+  const handleJoystickMove = (clientX: number, clientY: number) => {
+    const base = joystickBaseRef.current;
+    if (!base) return;
+    const rect = base.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+
+    const dx = clientX - centerX;
+    const dy = clientY - centerY;
+    const dist = Math.hypot(dx, dy);
+    const maxRadius = 38;
+
+    const clampedDist = Math.min(dist, maxRadius);
+    const angle = Math.atan2(dy, dx);
+    const knobX = Math.cos(angle) * clampedDist;
+    const knobY = Math.sin(angle) * clampedDist;
+
+    setJoystickPos({ x: knobX, y: knobY });
+
+    rocketControlsRef.current.analogX = knobX / maxRadius;
+    rocketControlsRef.current.analogY = -knobY / maxRadius;
+  };
+
+  const handleJoystickEnd = () => {
+    setJoystickPos({ x: 0, y: 0 });
+    setIsJoystickActive(false);
+    rocketControlsRef.current.analogX = 0;
+    rocketControlsRef.current.analogY = 0;
+    joystickTouchIdRef.current = null;
+  };
+
+  // Global drag listener for continuous joystick tracking
+  useEffect(() => {
+    if (!isRocketMode) {
+      handleJoystickEnd();
+      return;
+    }
+
+    const onGlobalTouchMove = (e: TouchEvent) => {
+      if (joystickTouchIdRef.current === null) return;
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        if (e.changedTouches[i].identifier === joystickTouchIdRef.current) {
+          e.preventDefault();
+          handleJoystickMove(e.changedTouches[i].clientX, e.changedTouches[i].clientY);
+          break;
+        }
+      }
+    };
+
+    const onGlobalTouchEnd = (e: TouchEvent) => {
+      if (joystickTouchIdRef.current === null) return;
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        if (e.changedTouches[i].identifier === joystickTouchIdRef.current) {
+          handleJoystickEnd();
+          break;
+        }
+      }
+    };
+
+    const onGlobalMouseMove = (e: MouseEvent) => {
+      if (isJoystickActive && joystickTouchIdRef.current === -1) {
+        handleJoystickMove(e.clientX, e.clientY);
+      }
+    };
+
+    const onGlobalMouseUp = () => {
+      if (isJoystickActive && joystickTouchIdRef.current === -1) {
+        handleJoystickEnd();
+      }
+    };
+
+    window.addEventListener("touchmove", onGlobalTouchMove, { passive: false });
+    window.addEventListener("touchend", onGlobalTouchEnd);
+    window.addEventListener("mousemove", onGlobalMouseMove);
+    window.addEventListener("mouseup", onGlobalMouseUp);
+
+    return () => {
+      window.removeEventListener("touchmove", onGlobalTouchMove);
+      window.removeEventListener("touchend", onGlobalTouchEnd);
+      window.removeEventListener("mousemove", onGlobalMouseMove);
+      window.removeEventListener("mouseup", onGlobalMouseUp);
+    };
+  }, [isRocketMode, isJoystickActive]);
 
   // External triggers
   const focusPlanetRef = useRef<(body: CelestialBody | null) => void>(() => {});
@@ -663,6 +779,7 @@ export default function HeroCanvas3D() {
       expMat.opacity = 0;
       shockwaveMat.opacity = 0;
       setRocketBanner("");
+      handleJoystickEnd();
       playBlipSound(440, 0.06);
     };
 
@@ -672,8 +789,8 @@ export default function HeroCanvas3D() {
       const key = e.code;
       if (key === "KeyA" || key === "ArrowLeft") rocketControlsRef.current.turnLeft = true;
       if (key === "KeyD" || key === "ArrowRight") rocketControlsRef.current.turnRight = true;
-      if (key === "KeyW" || key === "ArrowUp") rocketControlsRef.current.pitchDown = true;
-      if (key === "KeyS" || key === "ArrowDown") rocketControlsRef.current.pitchUp = true;
+      if (key === "KeyW" || key === "ArrowUp") rocketControlsRef.current.pitchUp = true;
+      if (key === "KeyS" || key === "ArrowDown") rocketControlsRef.current.pitchDown = true;
       if (key === "Space") {
         e.preventDefault();
         rocketControlsRef.current.boost = true;
@@ -688,8 +805,8 @@ export default function HeroCanvas3D() {
       const key = e.code;
       if (key === "KeyA" || key === "ArrowLeft") rocketControlsRef.current.turnLeft = false;
       if (key === "KeyD" || key === "ArrowRight") rocketControlsRef.current.turnRight = false;
-      if (key === "KeyW" || key === "ArrowUp") rocketControlsRef.current.pitchDown = false;
-      if (key === "KeyS" || key === "ArrowDown") rocketControlsRef.current.pitchUp = false;
+      if (key === "KeyW" || key === "ArrowUp") rocketControlsRef.current.pitchUp = false;
+      if (key === "KeyS" || key === "ArrowDown") rocketControlsRef.current.pitchDown = false;
       if (key === "Space") rocketControlsRef.current.boost = false;
       if (key === "KeyB" || key === "KeyX") rocketControlsRef.current.brake = false;
     };
@@ -987,27 +1104,31 @@ export default function HeroCanvas3D() {
             respawnRocket();
           }
         } else {
-          // Flight steering with realistic banking roll
+          // Flight steering with realistic analog joystick & keyboard support
           const ctrl = rocketControlsRef.current;
-          const turnSpeed = 0.045;
-          let targetBank = 0;
+          const turnSpeed = 0.048;
 
-          if (ctrl.turnLeft) {
-            rocketGroup.rotateOnAxis(new THREE.Vector3(0, 1, 0), turnSpeed);
-            targetBank = 0.45;
-          } else if (ctrl.turnRight) {
-            rocketGroup.rotateOnAxis(new THREE.Vector3(0, 1, 0), -turnSpeed);
-            targetBank = -0.45;
+          // Combine analog joystick (-1 to +1) with keyboard arrow/WASD buttons
+          let steerX = ctrl.analogX;
+          if (ctrl.turnLeft) steerX = -1.0;
+          if (ctrl.turnRight) steerX = 1.0;
+
+          let pitchY = ctrl.analogY;
+          if (ctrl.pitchDown) pitchY = -1.0;
+          if (ctrl.pitchUp) pitchY = 1.0;
+
+          // Apply analog yaw steering (left/right)
+          if (Math.abs(steerX) > 0.04) {
+            rocketGroup.rotateOnAxis(new THREE.Vector3(0, 1, 0), -steerX * turnSpeed);
           }
 
-          if (ctrl.pitchUp) {
-            rocketGroup.rotateOnAxis(new THREE.Vector3(1, 0, 0), turnSpeed * 0.75);
-          }
-          if (ctrl.pitchDown) {
-            rocketGroup.rotateOnAxis(new THREE.Vector3(1, 0, 0), -turnSpeed * 0.75);
+          // Apply analog pitch steering (up/down)
+          if (Math.abs(pitchY) > 0.04) {
+            rocketGroup.rotateOnAxis(new THREE.Vector3(1, 0, 0), pitchY * turnSpeed * 0.75);
           }
 
-          // Smoothly bank visual mesh without gimbal lock
+          // Smooth aerodynamic banking roll based on steering angle
+          const targetBank = -steerX * 0.52;
           rocketVisuals.rotation.z += (targetBank - rocketVisuals.rotation.z) * 0.15;
 
           const targetSpeed = ctrl.boost ? 0.11 : ctrl.brake ? 0.015 : 0.045;
@@ -1289,55 +1410,57 @@ export default function HeroCanvas3D() {
       </div>
 
       {/* Top Right Controls: Fullscreen Landscape (Mobile Only) + Rocket + Reset */}
-      <div className="absolute top-2.5 right-2.5 sm:top-3.5 sm:right-3.5 z-20 flex items-center gap-1.5">
-        {/* Launch Rocket Trigger in Top Header */}
-        {!selectedBody && !isRocketMode && (
-          <button
-            onClick={() => {
-              playClickSound();
-              launchRocketRef.current();
-            }}
-            className="flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl bg-gradient-to-r from-cyan-500/20 to-blue-600/20 hover:from-cyan-500/35 hover:to-blue-600/35 text-cyber-cyan border border-cyber-cyan/40 font-mono text-[10px] sm:text-xs font-bold transition-all shadow-md active:scale-95"
-            title="Luncurkan dan kendalikan roket penjelajah antariksa!"
-          >
-            <Rocket className="w-3.5 h-3.5 text-cyber-cyan animate-pulse" />
-            <span>Mode Roket</span>
-          </button>
-        )}
-
-        {/* Fullscreen Landscape Toggle - Exclusively for Android / Mobile, HIDDEN on PC */}
-        <button
-          onClick={toggleFullscreen}
-          className={`${
-            isFullscreen ? "flex" : "flex md:hidden"
-          } items-center gap-1 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl bg-[#070912]/90 hover:bg-white/15 text-white border border-white/15 font-mono text-[10px] sm:text-xs font-semibold transition-all active:scale-95 shadow-md`}
-          title={isFullscreen ? "Keluar Mode Layar Penuh" : "Mode Fullscreen Landscape (Layar Penuh Android)"}
-        >
-          {isFullscreen ? (
-            <>
-              <Minimize2 className="w-3.5 h-3.5 text-amber-400" />
-              <span>Keluar</span>
-            </>
-          ) : (
-            <>
-              <Maximize2 className="w-3.5 h-3.5 text-cyber-cyan" />
-              <span>Layar Penuh</span>
-            </>
+      {!isRocketMode && (
+        <div className="absolute top-2.5 right-2.5 sm:top-3.5 sm:right-3.5 z-20 flex items-center gap-1.5">
+          {/* Launch Rocket Trigger in Top Header */}
+          {!selectedBody && (
+            <button
+              onClick={() => {
+                playClickSound();
+                launchRocketRef.current();
+              }}
+              className="flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl bg-gradient-to-r from-cyan-500/20 to-blue-600/20 hover:from-cyan-500/35 hover:to-blue-600/35 text-cyber-cyan border border-cyber-cyan/40 font-mono text-[10px] sm:text-xs font-bold transition-all shadow-md active:scale-95"
+              title="Luncurkan dan kendalikan roket penjelajah antariksa!"
+            >
+              <Rocket className="w-3.5 h-3.5 text-cyber-cyan animate-pulse" />
+              <span>Mode Roket</span>
+            </button>
           )}
-        </button>
 
-        {/* Reset / Overview Button (when a planet is focused) */}
-        {selectedBody && !isRocketMode && (
+          {/* Fullscreen Landscape Toggle - Exclusively for Android / Mobile, HIDDEN on PC */}
           <button
-            onClick={() => handleSelectBody(null)}
-            className="flex items-center gap-1 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl bg-[#070912]/90 hover:bg-white/20 text-white border border-white/15 font-mono text-[10px] sm:text-xs font-semibold transition-all active:scale-95 shadow-md"
-            title="Kembali ke tampilan seluruh tata surya"
+            onClick={toggleFullscreen}
+            className={`${
+              isFullscreen ? "flex" : "flex md:hidden"
+            } items-center gap-1 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl bg-[#070912]/90 hover:bg-white/15 text-white border border-white/15 font-mono text-[10px] sm:text-xs font-semibold transition-all active:scale-95 shadow-md`}
+            title={isFullscreen ? "Keluar Mode Layar Penuh" : "Mode Fullscreen Landscape (Layar Penuh Android)"}
           >
-            <RotateCcw className="w-3.5 h-3.5 text-cyber-cyan" />
-            <span>Tata Surya</span>
+            {isFullscreen ? (
+              <>
+                <Minimize2 className="w-3.5 h-3.5 text-amber-400" />
+                <span>Keluar</span>
+              </>
+            ) : (
+              <>
+                <Maximize2 className="w-3.5 h-3.5 text-cyber-cyan" />
+                <span>Layar Penuh</span>
+              </>
+            )}
           </button>
-        )}
-      </div>
+
+          {/* Reset / Overview Button (when a planet is focused) */}
+          {selectedBody && (
+            <button
+              onClick={() => handleSelectBody(null)}
+              className="flex items-center gap-1 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl bg-[#070912]/90 hover:bg-white/20 text-white border border-white/15 font-mono text-[10px] sm:text-xs font-semibold transition-all active:scale-95 shadow-md"
+              title="Kembali ke tampilan seluruh tata surya"
+            >
+              <RotateCcw className="w-3.5 h-3.5 text-cyber-cyan" />
+              <span>Tata Surya</span>
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Overview Drag Hint */}
       {!selectedBody && (
@@ -1636,15 +1759,37 @@ export default function HeroCanvas3D() {
               </div>
             )}
 
-            {/* Right: Exit Rocket Mode Button */}
-            <button
-              onClick={() => exitRocketRef.current()}
-              className="flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-red-500/20 hover:bg-red-500/35 text-red-200 border border-red-500/40 font-mono text-[10px] sm:text-xs font-bold transition-all active:scale-95 shadow-lg"
-              title="Keluar dari mode roket (Kembali ke Tata Surya)"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span>Keluar Mode</span>
-            </button>
+            {/* Right: Fullscreen Toggle (Mobile/Fullscreen) + Exit Rocket Mode Button */}
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <button
+                onClick={toggleFullscreen}
+                className={`${
+                  isFullscreen ? "flex" : "flex md:hidden"
+                } items-center gap-1.5 px-2.5 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-[#060814]/90 hover:bg-white/15 text-white border border-white/20 font-mono text-[10px] sm:text-xs font-semibold transition-all active:scale-95 shadow-lg`}
+                title={isFullscreen ? "Keluar Mode Layar Penuh" : "Mode Fullscreen Landscape (Layar Penuh Android)"}
+              >
+                {isFullscreen ? (
+                  <>
+                    <Minimize2 className="w-3.5 h-3.5 text-amber-400" />
+                    <span className="hidden sm:inline">Layar Normal</span>
+                  </>
+                ) : (
+                  <>
+                    <Maximize2 className="w-3.5 h-3.5 text-cyber-cyan" />
+                    <span className="hidden sm:inline">Layar Penuh</span>
+                  </>
+                )}
+              </button>
+
+              <button
+                onClick={() => exitRocketRef.current()}
+                className="flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-red-500/20 hover:bg-red-500/35 text-red-200 border border-red-500/40 font-mono text-[10px] sm:text-xs font-bold transition-all active:scale-95 shadow-lg"
+                title="Keluar dari mode roket (Kembali ke Tata Surya)"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Keluar Mode</span>
+              </button>
+            </div>
           </div>
 
           {/* Center Banner Alert (Explosion or Launch notification) */}
@@ -1665,94 +1810,82 @@ export default function HeroCanvas3D() {
             </div>
           )}
 
-          {/* Bottom Flight Controls: Desktop Guide & Touch Virtual D-Pad / Thrusters */}
+          {/* Bottom Flight Controls: Virtual 360° Analog Joystick & Boost/Brake */}
           <div className="w-full flex items-end justify-between pointer-events-auto">
-            {/* Left: Mobile / Touch Virtual Directional D-Pad */}
-            <div className="flex flex-col items-center gap-1 p-2 rounded-2xl bg-[#060814]/80 backdrop-blur-md border border-white/10 shadow-xl select-none touch-none">
-              {/* Pitch Down (W / Up arrow) */}
-              <button
-                onMouseDown={() => (rocketControlsRef.current.pitchDown = true)}
-                onMouseUp={() => (rocketControlsRef.current.pitchDown = false)}
-                onMouseLeave={() => (rocketControlsRef.current.pitchDown = false)}
+            {/* Left: Virtual 360° Analog Joystick Controller */}
+            <div className="flex flex-col items-center select-none touch-none">
+              <div
+                ref={joystickBaseRef}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  joystickTouchIdRef.current = -1;
+                  handleJoystickStart(e.clientX, e.clientY);
+                }}
                 onTouchStart={(e) => {
                   e.preventDefault();
-                  rocketControlsRef.current.pitchDown = true;
+                  if (e.changedTouches.length > 0) {
+                    const t = e.changedTouches[0];
+                    joystickTouchIdRef.current = t.identifier;
+                    handleJoystickStart(t.clientX, t.clientY);
+                  }
                 }}
-                onTouchEnd={(e) => {
-                  e.preventDefault();
-                  rocketControlsRef.current.pitchDown = false;
-                }}
-                className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white/10 hover:bg-white/20 active:bg-cyber-cyan/30 text-white flex items-center justify-center border border-white/15 active:scale-95 transition-all shadow-md"
-                title="Pitch Bawah (Turun)"
+                className={`relative w-28 h-28 sm:w-32 sm:h-32 rounded-full flex items-center justify-center cursor-grab active:cursor-grabbing backdrop-blur-md transition-shadow duration-200 ${
+                  isJoystickActive
+                    ? "bg-[#060818]/90 border-2 border-cyber-cyan shadow-[0_0_25px_rgba(0,240,255,0.45)]"
+                    : "bg-[#060814]/75 border border-white/20 shadow-[0_4px_20px_rgba(0,0,0,0.6)]"
+                }`}
+                title="Analog Joystick 360°: Arahkan roket ke segala arah"
               >
-                <ArrowUp className="w-5 h-5" />
-              </button>
+                {/* Radial Reticle & Crosshairs */}
+                <div className="absolute inset-0 rounded-full border border-dashed border-white/15 pointer-events-none" />
+                <div className="absolute w-[68%] h-[68%] rounded-full border border-cyber-cyan/20 pointer-events-none" />
+                <div className="absolute w-[36%] h-[36%] rounded-full border border-cyber-cyan/30 pointer-events-none" />
+                <div className="absolute w-full h-[1px] bg-white/10 pointer-events-none" />
+                <div className="absolute h-full w-[1px] bg-white/10 pointer-events-none" />
 
-              {/* Horizontal Row: Turn Left & Turn Right */}
-              <div className="flex items-center gap-2">
-                <button
-                  onMouseDown={() => (rocketControlsRef.current.turnLeft = true)}
-                  onMouseUp={() => (rocketControlsRef.current.turnLeft = false)}
-                  onMouseLeave={() => (rocketControlsRef.current.turnLeft = false)}
-                  onTouchStart={(e) => {
-                    e.preventDefault();
-                    rocketControlsRef.current.turnLeft = true;
+                {/* Direction indicators */}
+                <span className="absolute top-1 text-[8px] sm:text-[9px] font-mono font-bold text-cyber-cyan/80 pointer-events-none tracking-wider">
+                  ▲ NAIK
+                </span>
+                <span className="absolute bottom-1 text-[8px] sm:text-[9px] font-mono font-bold text-cyber-cyan/80 pointer-events-none tracking-wider">
+                  ▼ TURUN
+                </span>
+                <span className="absolute left-1.5 text-[8px] sm:text-[9px] font-mono font-bold text-cyber-cyan/80 pointer-events-none">
+                  ◀
+                </span>
+                <span className="absolute right-1.5 text-[8px] sm:text-[9px] font-mono font-bold text-cyber-cyan/80 pointer-events-none">
+                  ▶
+                </span>
+
+                {/* Draggable Analog Knob */}
+                <div
+                  className="absolute w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center pointer-events-none shadow-2xl"
+                  style={{
+                    transform: `translate3d(${joystickPos.x}px, ${joystickPos.y}px, 0)`,
+                    transition: isJoystickActive ? "none" : "transform 0.15s cubic-bezier(0.2, 0.9, 0.3, 1.2)",
+                    background: isJoystickActive
+                      ? "radial-gradient(circle at 35% 35%, #38bdf8 0%, #0284c7 45%, #0f172a 100%)"
+                      : "radial-gradient(circle at 35% 35%, #00f0ff 0%, #0369a1 50%, #090d1f 100%)",
+                    boxShadow: isJoystickActive
+                      ? "0 0 20px rgba(56, 189, 248, 0.8), inset 0 0 10px rgba(255,255,255,0.6)"
+                      : "0 4px 15px rgba(0, 240, 255, 0.4), inset 0 0 6px rgba(255,255,255,0.4)",
+                    border: "2px solid rgba(255, 255, 255, 0.7)",
                   }}
-                  onTouchEnd={(e) => {
-                    e.preventDefault();
-                    rocketControlsRef.current.turnLeft = false;
-                  }}
-                  className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white/10 hover:bg-white/20 active:bg-cyber-cyan/30 text-white flex items-center justify-center border border-white/15 active:scale-95 transition-all shadow-md"
-                  title="Belok Kiri"
                 >
-                  <ArrowLeft className="w-5 h-5" />
-                </button>
-
-                <div className="w-5 h-5 rounded-full border border-white/10 flex items-center justify-center">
-                  <div className="w-1.5 h-1.5 rounded-full bg-cyber-cyan" />
+                  <div className="w-6 h-6 rounded-full border border-white/40 flex items-center justify-center">
+                    <div className="w-2.5 h-2.5 rounded-full bg-white shadow-[0_0_8px_#ffffff]" />
+                  </div>
                 </div>
-
-                <button
-                  onMouseDown={() => (rocketControlsRef.current.turnRight = true)}
-                  onMouseUp={() => (rocketControlsRef.current.turnRight = false)}
-                  onMouseLeave={() => (rocketControlsRef.current.turnRight = false)}
-                  onTouchStart={(e) => {
-                    e.preventDefault();
-                    rocketControlsRef.current.turnRight = true;
-                  }}
-                  onTouchEnd={(e) => {
-                    e.preventDefault();
-                    rocketControlsRef.current.turnRight = false;
-                  }}
-                  className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white/10 hover:bg-white/20 active:bg-cyber-cyan/30 text-white flex items-center justify-center border border-white/15 active:scale-95 transition-all shadow-md"
-                  title="Belok Kanan"
-                >
-                  <ArrowRight className="w-5 h-5" />
-                </button>
               </div>
 
-              {/* Pitch Up (S / Down arrow) */}
-              <button
-                onMouseDown={() => (rocketControlsRef.current.pitchUp = true)}
-                onMouseUp={() => (rocketControlsRef.current.pitchUp = false)}
-                onMouseLeave={() => (rocketControlsRef.current.pitchUp = false)}
-                onTouchStart={(e) => {
-                  e.preventDefault();
-                  rocketControlsRef.current.pitchUp = true;
-                }}
-                onTouchEnd={(e) => {
-                  e.preventDefault();
-                  rocketControlsRef.current.pitchUp = false;
-                }}
-                className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white/10 hover:bg-white/20 active:bg-cyber-cyan/30 text-white flex items-center justify-center border border-white/15 active:scale-95 transition-all shadow-md"
-                title="Pitch Atas (Naik)"
-              >
-                <ArrowDown className="w-5 h-5" />
-              </button>
+              {/* Joystick Footer Hint */}
+              <div className="mt-1 px-2 py-0.5 rounded-md bg-[#060814]/80 border border-white/10 font-mono text-[8px] sm:text-[9px] text-zinc-400">
+                🕹️ ANALOG 360°
+              </div>
             </div>
 
             {/* Center: Desktop Keyboard Help Guide */}
-            <div className="hidden md:flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-[#060814]/85 border border-white/15 backdrop-blur-md font-mono text-[11px] text-zinc-300 shadow-xl">
+            <div className="hidden md:flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-[#060814]/85 border border-white/15 backdrop-blur-md font-mono text-[11px] text-zinc-300 shadow-xl mb-1">
               <span className="text-cyber-cyan font-bold">[W/S]</span>
               <span>Pitch</span>
               <span className="text-zinc-600">•</span>
@@ -1760,14 +1893,14 @@ export default function HeroCanvas3D() {
               <span>Belok</span>
               <span className="text-zinc-600">•</span>
               <span className="text-cyber-cyan font-bold">[SPASI]</span>
-              <span>Turbo Boost</span>
+              <span>Turbo</span>
               <span className="text-zinc-600">•</span>
               <span className="text-amber-400 font-bold">[B]</span>
               <span>Rem</span>
             </div>
 
             {/* Right: Boost & Brake Action Buttons */}
-            <div className="flex flex-col gap-2 p-2 rounded-2xl bg-[#060814]/80 backdrop-blur-md border border-white/10 shadow-xl select-none touch-none">
+            <div className="flex flex-col gap-2 p-1.5 sm:p-2 rounded-2xl bg-[#060814]/80 backdrop-blur-md border border-white/10 shadow-xl select-none touch-none">
               {/* Turbo Boost Button */}
               <button
                 onMouseDown={() => {
@@ -1785,8 +1918,8 @@ export default function HeroCanvas3D() {
                   e.preventDefault();
                   rocketControlsRef.current.boost = false;
                 }}
-                className="px-4 py-2.5 sm:px-5 sm:py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-black font-black font-mono text-xs sm:text-sm flex items-center justify-center gap-2 active:scale-90 transition-all shadow-lg shadow-cyan-500/30 active:from-cyan-400 active:to-blue-500"
-                title="Tekan untuk Akselerasi Penuh"
+                className="px-3.5 py-2 sm:px-5 sm:py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-black font-black font-mono text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 active:scale-90 transition-all shadow-lg shadow-cyan-500/30 active:from-cyan-400 active:to-blue-500"
+                title="Tekan untuk Akselerasi Turbo Penuh"
               >
                 <Flame className="w-4 h-4 fill-current text-white animate-pulse" />
                 <span className="text-white font-bold">BOOST</span>
@@ -1805,8 +1938,8 @@ export default function HeroCanvas3D() {
                   e.preventDefault();
                   rocketControlsRef.current.brake = false;
                 }}
-                className="px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 active:bg-amber-500/40 text-amber-300 border border-amber-500/40 font-mono text-xs font-bold flex items-center justify-center gap-1.5 active:scale-90 transition-all shadow-md"
-                title="Tekan untuk Mengerem"
+                className="px-3.5 py-1.5 sm:px-5 sm:py-2.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 active:bg-amber-500/40 text-amber-300 border border-amber-500/40 font-mono text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1.5 active:scale-90 transition-all shadow-md"
+                title="Tekan untuk Mengerem Roket"
               >
                 <span>REM</span>
               </button>

@@ -7,6 +7,29 @@
   ],
   "projects": [
     {
+      "id": "movienas",
+      "title": "MovieNas",
+      "subtitle": "Streaming Film, Series & Drama Pendek",
+      "category": "Android Application",
+      "price": 20000,
+      "formattedPrice": "IDR 20.000",
+      "description": "Aplikasi streaming film Box Office, series viral, anime, dan drama pendek gratis tanpa batas. Dilengkapi animasi intro laser beam ala Netflix, mode dark modern, pemutar ExoPlayer multi-resolusi (360p-1080p), serta fitur privasi download eksklusif (sembunyikan dari galeri HP).",
+      "features": [
+        "Streaming Cepat Langsung CDN Resmi, Anti-Lelet & Bebas VPN",
+        "Tampilan Sinematik & Animasi Splash Laser Beam ala Netflix",
+        "Mode Offline & Privasi Download (Sembunyikan dari Galeri HP)",
+        "Pemutar Video ExoPlayer (Multi-Resolusi 360p-1080p, Subtitle Indo, PiP)",
+        "Smart Network Monitoring: Auto-reconnect & Notifikasi Offline",
+        "Aplikasi Super Ringan (~3.6 MB) Kompatibel Android 7 s/d 14/15"
+      ],
+      "techStack": ["Android", "Kotlin", "ExoPlayer", "Room DB", "CDN Streaming"],
+      "logo": "/logos/movienas.png",
+      "demoUrl": "https://movienas.vercel.app",
+      "apkUrl": "https://www.mediafire.com/file/9qsnv4vjzec27gj/app-release+(2).apk/file",
+      "badge": "NEW RELEASE",
+      "featured": true
+    },
+    {
       "id": "nanztube",
       "title": "NanzTube",
       "subtitle": "Modern Android YouTube Client",
