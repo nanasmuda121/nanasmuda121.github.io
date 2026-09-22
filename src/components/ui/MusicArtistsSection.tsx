@@ -46,7 +46,7 @@ export default function MusicArtistsSection() {
       return;
     }
     if (!item.videoId) {
-      window.open(`https://music.youtube.com/search?q=${encodeURIComponent(item.query ?? item.title)}`, "_blank");
+      window.open(`https://www.youtube.com/results?search_query=${encodeURIComponent(item.query ?? item.title)}`, "_blank");
       return;
     }
     setPlaying({ videoId: item.videoId, title: item.title, sub: item.sub });
@@ -68,7 +68,7 @@ export default function MusicArtistsSection() {
           </h2>
           <p className="font-mono text-xs sm:text-sm text-zinc-400 max-w-2xl leading-relaxed">
             Tumpukan kartu favorit — geser ke kiri / kanan buat lihat yang lain. Klik play untuk memutar
-            lewat pemutar YouTube Music yang transparan.
+            lewat pemutar YouTube transparan yang tertanam langsung di halaman.
           </p>
         </div>
 
@@ -144,7 +144,7 @@ export default function MusicArtistsSection() {
                     playItem({
                       videoId: artist.videoId,
                       title: `${artist.highlightSong} — ${artist.name}`,
-                      sub: "YouTube Music",
+                      sub: "YouTube",
                       query: `${artist.name} ${artist.highlightSong}`,
                     })
                   }
@@ -201,7 +201,7 @@ export default function MusicArtistsSection() {
         )}
       </AnimatePresence>
 
-      {/* Transparent YouTube Music embed player */}
+      {/* Transparent YouTube embed player */}
       <AnimatePresence>
         {playing?.videoId && (
           <motion.div
@@ -219,13 +219,13 @@ export default function MusicArtistsSection() {
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
                 <a
-                  href={`https://music.youtube.com/watch?v=${playing.videoId}`}
+                  href={`https://www.youtube.com/watch?v=${playing.videoId}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-zinc-300 hover:text-white hover:bg-white/10 transition-colors"
                 >
                   <ExternalLink className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">YouTube Music</span>
+                  <span className="hidden sm:inline">Buka di YouTube</span>
                 </a>
                 <button
                   onClick={() => {
@@ -243,10 +243,11 @@ export default function MusicArtistsSection() {
             <div className="overflow-hidden rounded-3xl border border-white/10 bg-[#0b0e16] shadow-2xl">
               <iframe
                 key={playing.videoId}
-                src={`https://music.youtube.com/watch?v=${playing.videoId}&autoplay=1&playnext=0`}
-                title={`YouTube Music — ${playing.title}`}
+                src={`https://www.youtube-nocookie.com/embed/${playing.videoId}?autoplay=1&rel=0&playsinline=1`}
+                title={`YouTube — ${playing.title}`}
                 allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
                 allowFullScreen
+                loading="lazy"
                 className="w-full mix-blend-screen h-[210px] sm:h-[250px] md:h-[300px]"
               />
             </div>
@@ -408,7 +409,7 @@ function ArtistCard({
             ) : (
               <>
                 <Play className="w-4 h-4 fill-current" />
-                {artist.videoId ? "Putar Lagu" : "Cari di YT Music"}
+                {artist.videoId ? "Putar Lagu" : "Cari di YouTube"}
               </>
             )}
           </button>
@@ -477,7 +478,7 @@ function TrackCard({
               e.stopPropagation();
               onPlay();
             }}
-            aria-label={track.videoId ? `Putar ${track.title}` : `Cari ${track.title} di YouTube Music`}
+            aria-label={track.videoId ? `Putar ${track.title}` : `Cari ${track.title} di YouTube`}
             className={`absolute inset-0 m-auto w-16 h-16 sm:w-20 sm:h-20 rounded-full backdrop-blur-md flex items-center justify-center transition-all active:scale-90 shadow-2xl ${
               isPlaying
                 ? "bg-cyan-400 shadow-cyan-400/40"
