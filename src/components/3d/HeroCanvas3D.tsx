@@ -314,30 +314,56 @@ export default function HeroCanvas3D() {
         clickableObjects.push(ringMesh);
       }
 
-      // Earth's Moon
+      // Earth's Moon (Luna)
       let moonGroup: THREE.Group | undefined;
       let moonMesh: THREE.Mesh | undefined;
       let moonSprite: THREE.Sprite | undefined;
 
       if (body.hasMoon && body.moonTexturePath) {
+        // Detached from pMesh (Earth axial spin) and anchored directly to orbitGroup at Earth's distance
+        // This ensures Moon orbits the Sun with Earth, but does NOT inherit Earth's daily spin!
         moonGroup = new THREE.Group();
-        pMesh.add(moonGroup);
+        moonGroup.position.x = body.distance;
+        orbitGroup.add(moonGroup);
 
+        // Natural inclination of Moon's orbit (5.14 degrees)
+        moonGroup.rotation.x = 0.09;
+
+        // Subtle Moon Orbit Ring around Earth
+        const moonSegments = 64;
+        const moonOrbitRadius = MOON_DATA.distance; // 0.50
+        const moonTrackPts: number[] = [];
+        for (let i = 0; i <= moonSegments; i++) {
+          const theta = (i / moonSegments) * Math.PI * 2;
+          moonTrackPts.push(Math.cos(theta) * moonOrbitRadius, 0, Math.sin(theta) * moonOrbitRadius);
+        }
+        const moonTrackGeo = new THREE.BufferGeometry();
+        moonTrackGeo.setAttribute("position", new THREE.Float32BufferAttribute(moonTrackPts, 3));
+        const moonTrackMat = new THREE.LineBasicMaterial({
+          color: 0xffffff,
+          transparent: true,
+          opacity: 0.16,
+        });
+        const moonTrackLine = new THREE.Line(moonTrackGeo, moonTrackMat);
+        moonGroup.add(moonTrackLine);
+
+        // Moon Sphere Mesh
         const moonTexture = textureLoader.load(body.moonTexturePath);
-        const moonGeo = new THREE.SphereGeometry(0.075, 16, 16);
+        const moonGeo = new THREE.SphereGeometry(MOON_DATA.size, 24, 24);
         const moonMat = new THREE.MeshStandardMaterial({
           map: moonTexture,
-          color: 0xd1d5db,
+          color: MOON_DATA.fallbackColor,
           roughness: 0.85,
         });
         moonMesh = new THREE.Mesh(moonGeo, moonMat);
-        moonMesh.position.x = 0.52;
+        moonMesh.position.x = moonOrbitRadius;
         moonMesh.userData = { body: MOON_DATA };
         moonGroup.add(moonMesh);
 
-        moonSprite = createNameSprite(MOON_DATA.name, 0xd1d5db);
+        // Moon Label Sprite
+        moonSprite = createNameSprite(MOON_DATA.name, MOON_DATA.fallbackColor);
         moonSprite.scale.set(1.15, 0.28, 1);
-        moonSprite.position.set(0, 0.22, 0);
+        moonSprite.position.set(0, MOON_DATA.size + 0.22, 0);
         moonSprite.userData = { body: MOON_DATA };
         moonMesh.add(moonSprite);
 
@@ -365,7 +391,7 @@ export default function HeroCanvas3D() {
     const asteroidPos = new Float32Array(asteroidCount * 3);
 
     for (let i = 0; i < asteroidCount * 3; i += 3) {
-      const radius = 5.1 + Math.random() * 0.75;
+      const radius = 5.3 + Math.random() * 0.75;
       const angle = Math.random() * Math.PI * 2;
       const yOffset = (Math.random() - 0.5) * 0.28;
 
@@ -434,7 +460,7 @@ export default function HeroCanvas3D() {
     };
 
     const onPointerMove = (e: MouseEvent) => {
-      if (isMouseDown) {
+      if (isMouseDown && !selectedBodyRef.current) {
         const deltaX = e.clientX - prevMousePos.x;
         const deltaY = e.clientY - prevMousePos.y;
 
@@ -480,7 +506,7 @@ export default function HeroCanvas3D() {
     };
 
     const onTouchMove = (e: TouchEvent) => {
-      if (isMouseDown && e.touches.length > 0) {
+      if (isMouseDown && e.touches.length > 0 && !selectedBodyRef.current) {
         const deltaX = e.touches[0].clientX - prevMousePos.x;
         const deltaY = e.touches[0].clientY - prevMousePos.y;
 
@@ -545,6 +571,14 @@ export default function HeroCanvas3D() {
     const targetWorldPos = new THREE.Vector3();
     const desiredCameraPos = new THREE.Vector3();
     const lookTarget = new THREE.Vector3();
+    const refCenterPosVec = new THREE.Vector3();
+    const overviewCamPos = new THREE.Vector3(0, 7.5, 14);
+    const overviewLookAt = new THREE.Vector3(0, 0, 0);
+
+    // Smooth transition offsets to eliminate all velocity lag and micro-jitter
+    const camOffset = new THREE.Vector3();
+    const lookOffset = new THREE.Vector3();
+    let prevSelectedId: string | null = null;
 
     const animate = () => {
       animId = requestAnimationFrame(animate);
@@ -561,20 +595,34 @@ export default function HeroCanvas3D() {
       const activeSelected = selectedBodyRef.current;
       const speedFactor = orbitSpeedRef.current;
 
+      // Damped orbit speed when focused so tracking is calm, cinematic, and stable
+      const trackingSpeedDamping = activeSelected !== null ? 0.32 : 1.0;
+      const effectiveSpeedFactor = speedFactor * trackingSpeedDamping;
+
       // Orbit Planets CONTINUES MOVING even when clicked
       if (isPlayingRef.current) {
         planetNodes.forEach((node) => {
-          node.orbitGroup.rotation.y += node.body.speed * speedFactor;
+          node.orbitGroup.rotation.y += node.body.speed * effectiveSpeedFactor;
           node.mesh.rotation.y += 0.018; // Rotasi planet pada porosnya
 
           if (node.moonGroup) {
-            node.moonGroup.rotation.y += 0.045; // Bulan mengelilingi Bumi
+            node.moonGroup.rotation.y += MOON_DATA.speed * effectiveSpeedFactor;
+            if (node.moonMesh) {
+              node.moonMesh.rotation.y += MOON_DATA.speed * effectiveSpeedFactor; // Tidal locking
+            }
           }
         });
       }
 
+      const currentId = activeSelected?.id ?? null;
+      const isSelectionChanged = currentId !== prevSelectedId;
+
       // Camera Tracking Logic
       if (activeSelected) {
+        // Smoothly ease solarGroup back to baseline orientation so tracking has standard celestial view
+        solarGroup.rotation.x += (0.45 - solarGroup.rotation.x) * 0.05;
+        solarGroup.rotation.y += (0 - solarGroup.rotation.y) * 0.05;
+
         let focusedMesh: THREE.Object3D | null = null;
         if (activeSelected.id === "matahari") {
           focusedMesh = sunMesh;
@@ -593,24 +641,36 @@ export default function HeroCanvas3D() {
           focusedMesh.getWorldPosition(targetWorldPos);
 
           const ZOOM_DISTANCES: Record<string, number> = {
-            matahari: 5.2,
-            merkurius: 1.25,
-            venus: 1.65,
-            bumi: 1.95,
-            bulan: 0.88,
-            mars: 1.45,
-            jupiter: 3.6,
-            saturnus: 5.4,
-            uranus: 3.6,
+            matahari: 4.6,
+            merkurius: 0.95,
+            venus: 1.35,
+            bumi: 1.50,
+            bulan: 0.58,
+            mars: 1.10,
+            jupiter: 3.0,
+            saturnus: 4.4,
+            uranus: 2.4,
             neptunus: 2.2,
           };
 
-          const zoomDistance = ZOOM_DISTANCES[activeSelected.id] ?? (activeSelected.size * 3.5 + 1.2);
+          const zoomDistance =
+            ZOOM_DISTANCES[activeSelected.id] ?? (activeSelected.size * 3.5 + 1.2);
 
           // 2. Analytical Orbital Direction (Zero Lag, Zero Jitter)
-          const distToCenter = Math.hypot(targetWorldPos.x, targetWorldPos.z);
-          const radX = distToCenter > 0.01 ? targetWorldPos.x / distToCenter : 1;
-          const radZ = distToCenter > 0.01 ? targetWorldPos.z / distToCenter : 0;
+          // For the Moon, use Earth's world position as the solar orbital reference center
+          // so the camera offset frame glides smoothly without Moon-orbit wobbling!
+          let refCenterWorldPos = targetWorldPos;
+          if (activeSelected.id === "bulan") {
+            const earthNode = planetNodes.find((n) => n.body.id === "bumi");
+            if (earthNode) {
+              earthNode.mesh.getWorldPosition(refCenterPosVec);
+              refCenterWorldPos = refCenterPosVec;
+            }
+          }
+
+          const distToCenter = Math.hypot(refCenterWorldPos.x, refCenterWorldPos.z);
+          const radX = distToCenter > 0.01 ? refCenterWorldPos.x / distToCenter : 1;
+          const radZ = distToCenter > 0.01 ? refCenterWorldPos.z / distToCenter : 0;
           const tanX = -radZ;
           const tanZ = radX;
 
@@ -638,8 +698,8 @@ export default function HeroCanvas3D() {
           // 3. Subtle Organic Wave Effect (ombak naik-turun dan sedikit kiri-bawah sangat lembut):
           const waveTime = performance.now() * 0.0012;
           const waveUp = Math.sin(waveTime) * 0.015 * zoomDistance;
-          const waveSide = Math.cos(waveTime * 0.8) * 0.013 * zoomDistance;
-          const waveDrop = (Math.sin(waveTime * 0.9) - 0.4) * 0.007 * zoomDistance;
+          const waveSide = Math.cos(waveTime * 0.8) * 0.012 * zoomDistance;
+          const waveDrop = (Math.sin(waveTime * 0.9) - 0.4) * 0.006 * zoomDistance;
 
           desiredCameraPos.set(
             baseCamX + rightX * waveSide,
@@ -647,13 +707,12 @@ export default function HeroCanvas3D() {
             baseCamZ + rightZ * waveSide
           );
 
-          if (!isNaN(desiredCameraPos.x)) {
-            camera.position.lerp(desiredCameraPos, 0.12);
-          }
-
-          // 4. Natural left-side framing (around 30%-35% from left edge)
-          const isWideView = (canvasHolder.clientWidth || window.innerWidth) > 768;
-          const shiftFactor = isWideView ? 0.35 : 0.20;
+          // 4. Natural left-side framing (around 32% from left edge for wide/landscape)
+          const isWideView =
+            (canvasHolder.clientWidth || window.innerWidth) /
+              Math.max(canvasHolder.clientHeight || window.innerHeight, 1) >
+            1.15;
+          const shiftFactor = isWideView ? 0.32 : 0.18;
           const shiftDist = zoomDistance * shiftFactor;
 
           lookTarget.set(
@@ -662,19 +721,37 @@ export default function HeroCanvas3D() {
             targetWorldPos.z + rightZ * shiftDist + rightZ * (waveSide * 0.25)
           );
 
-          if (!isNaN(lookTarget.x)) {
-            currentLookAt.lerp(lookTarget, 0.12);
-            camera.lookAt(currentLookAt);
+          // When selection changes, smoothly bridge from current camera position
+          if (isSelectionChanged) {
+            camOffset.copy(camera.position).sub(desiredCameraPos);
+            lookOffset.copy(currentLookAt).sub(lookTarget);
+            prevSelectedId = currentId;
           }
+
+          // Zero-lag tracking convergence: offsets decay to zero, locking camera to target with no micro-jitter
+          camOffset.multiplyScalar(0.92);
+          lookOffset.multiplyScalar(0.92);
+
+          camera.position.copy(desiredCameraPos).add(camOffset);
+          currentLookAt.copy(lookTarget).add(lookOffset);
+          camera.lookAt(currentLookAt);
         }
       } else {
         // Global Overview Mode: Interactive 360° Drag
         solarGroup.rotation.x += (targetTiltX - solarGroup.rotation.x) * 0.08;
         solarGroup.rotation.y += (targetTiltY - solarGroup.rotation.y) * 0.08;
 
-        desiredCameraPos.set(0, 7.5, 14);
-        camera.position.lerp(desiredCameraPos, 0.05);
-        currentLookAt.lerp(new THREE.Vector3(0, 0, 0), 0.05);
+        if (isSelectionChanged) {
+          camOffset.copy(camera.position).sub(overviewCamPos);
+          lookOffset.copy(currentLookAt).sub(overviewLookAt);
+          prevSelectedId = null;
+        }
+
+        camOffset.multiplyScalar(0.92);
+        lookOffset.multiplyScalar(0.92);
+
+        camera.position.copy(overviewCamPos).add(camOffset);
+        currentLookAt.copy(overviewLookAt).add(lookOffset);
         camera.lookAt(currentLookAt);
       }
 
