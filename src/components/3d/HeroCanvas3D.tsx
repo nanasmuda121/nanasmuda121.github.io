@@ -137,6 +137,7 @@ export default function HeroCanvas3D() {
 
     const initialWidth = canvasHolder.clientWidth || 600;
     const initialHeight = canvasHolder.clientHeight || 450;
+    const isMobile = initialWidth < 768 || (typeof window !== "undefined" && window.innerWidth < 768);
 
     const camera = new THREE.PerspectiveCamera(
       45,
@@ -148,12 +149,13 @@ export default function HeroCanvas3D() {
     camera.lookAt(0, 0, 0);
 
     const renderer = new THREE.WebGLRenderer({
-      antialias: true,
+      antialias: !isMobile,
       alpha: true,
       powerPreference: "high-performance",
+      precision: isMobile ? "mediump" : "highp",
     });
     renderer.setSize(initialWidth, initialHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setPixelRatio(isMobile ? 1.0 : Math.min(window.devicePixelRatio || 1, 1.5));
 
     // Clear holder & mount canvas
     while (canvasHolder.firstChild) {
@@ -215,13 +217,13 @@ export default function HeroCanvas3D() {
         depthTest: false,
       });
       const sprite = new THREE.Sprite(spriteMaterial);
-      sprite.scale.set(1.5, 0.38, 1);
+      sprite.scale.set(isMobile ? 1.15 : 1.45, isMobile ? 0.28 : 0.36, 1);
       return sprite;
     }
 
     // --- 1. The Sun (Matahari) ---
     const sunTexture = textureLoader.load(SUN_DATA.texturePath);
-    const sunGeo = new THREE.SphereGeometry(SUN_DATA.size, 32, 32);
+    const sunGeo = new THREE.SphereGeometry(SUN_DATA.size, isMobile ? 22 : 32, isMobile ? 22 : 32);
     const sunMat = new THREE.MeshBasicMaterial({
       map: sunTexture,
       color: SUN_DATA.fallbackColor,
@@ -231,7 +233,7 @@ export default function HeroCanvas3D() {
     solarGroup.add(sunMesh);
 
     // Corona wireframe / glow sphere
-    const coronaGeo = new THREE.SphereGeometry(SUN_DATA.size * 1.25, 32, 32);
+    const coronaGeo = new THREE.SphereGeometry(SUN_DATA.size * 1.25, isMobile ? 18 : 28, isMobile ? 18 : 28);
     const coronaMat = new THREE.MeshBasicMaterial({
       color: 0xf59e0b,
       transparent: true,
@@ -254,7 +256,7 @@ export default function HeroCanvas3D() {
 
     CELESTIAL_BODIES.forEach((body, idx) => {
       // Orbit Line
-      const segments = 128;
+      const segments = isMobile ? 48 : 96;
       const trackPoints: number[] = [];
       for (let i = 0; i <= segments; i++) {
         const theta = (i / segments) * Math.PI * 2;
@@ -276,7 +278,7 @@ export default function HeroCanvas3D() {
 
       // Planet Sphere
       const pTexture = textureLoader.load(body.texturePath);
-      const pGeo = new THREE.SphereGeometry(body.size, 32, 32);
+      const pGeo = new THREE.SphereGeometry(body.size, isMobile ? 20 : 28, isMobile ? 20 : 28);
       const pMat = new THREE.MeshStandardMaterial({
         map: pTexture,
         color: body.fallbackColor,
@@ -298,7 +300,7 @@ export default function HeroCanvas3D() {
 
       // Saturn & Uranus Rings
       if (body.hasRing && body.ringInner && body.ringOuter) {
-        const ringGeo = new THREE.RingGeometry(body.ringInner, body.ringOuter, 64);
+        const ringGeo = new THREE.RingGeometry(body.ringInner, body.ringOuter, isMobile ? 36 : 64);
         const ringTexture = body.ringTexturePath ? textureLoader.load(body.ringTexturePath) : null;
         const ringMat = new THREE.MeshStandardMaterial({
           map: ringTexture || undefined,
@@ -320,8 +322,6 @@ export default function HeroCanvas3D() {
       let moonSprite: THREE.Sprite | undefined;
 
       if (body.hasMoon && body.moonTexturePath) {
-        // Detached from pMesh (Earth axial spin) and anchored directly to orbitGroup at Earth's distance
-        // This ensures Moon orbits the Sun with Earth, but does NOT inherit Earth's daily spin!
         moonGroup = new THREE.Group();
         moonGroup.position.x = body.distance;
         orbitGroup.add(moonGroup);
@@ -330,7 +330,7 @@ export default function HeroCanvas3D() {
         moonGroup.rotation.x = 0.09;
 
         // Subtle Moon Orbit Ring around Earth
-        const moonSegments = 64;
+        const moonSegments = isMobile ? 32 : 64;
         const moonOrbitRadius = MOON_DATA.distance; // 0.50
         const moonTrackPts: number[] = [];
         for (let i = 0; i <= moonSegments; i++) {
@@ -349,7 +349,7 @@ export default function HeroCanvas3D() {
 
         // Moon Sphere Mesh
         const moonTexture = textureLoader.load(body.moonTexturePath);
-        const moonGeo = new THREE.SphereGeometry(MOON_DATA.size, 24, 24);
+        const moonGeo = new THREE.SphereGeometry(MOON_DATA.size, isMobile ? 16 : 22, isMobile ? 16 : 22);
         const moonMat = new THREE.MeshStandardMaterial({
           map: moonTexture,
           color: MOON_DATA.fallbackColor,
@@ -362,7 +362,7 @@ export default function HeroCanvas3D() {
 
         // Moon Label Sprite
         moonSprite = createNameSprite(MOON_DATA.name, MOON_DATA.fallbackColor);
-        moonSprite.scale.set(1.15, 0.28, 1);
+        moonSprite.scale.set(isMobile ? 1.05 : 1.25, isMobile ? 0.25 : 0.30, 1);
         moonSprite.position.set(0, MOON_DATA.size + 0.22, 0);
         moonSprite.userData = { body: MOON_DATA };
         moonMesh.add(moonSprite);
@@ -386,7 +386,7 @@ export default function HeroCanvas3D() {
     });
 
     // --- 3. Asteroid Belt ---
-    const asteroidCount = 380;
+    const asteroidCount = isMobile ? 150 : 320;
     const asteroidGeo = new THREE.BufferGeometry();
     const asteroidPos = new Float32Array(asteroidCount * 3);
 
@@ -411,7 +411,7 @@ export default function HeroCanvas3D() {
     solarGroup.add(asteroidBelt);
 
     // --- 4. Starfield Background ---
-    const starCount = 950;
+    const starCount = isMobile ? 350 : 750;
     const starGeo = new THREE.BufferGeometry();
     const starPos = new Float32Array(starCount * 3);
 
@@ -565,6 +565,16 @@ export default function HeroCanvas3D() {
     };
     window.addEventListener("resize", onResize);
 
+    // Viewport Visibility Observer: Pauses rendering when scrolled offscreen to prevent any mobile lag
+    let isCanvasVisible = true;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        isCanvasVisible = entry.isIntersecting;
+      },
+      { threshold: 0.05 }
+    );
+    observer.observe(canvasHolder);
+
     // --- Animation Loop with Real-time Camera Follow & Left-side Framing ---
     let animId: number;
     const currentLookAt = new THREE.Vector3(0, 0, 0);
@@ -582,6 +592,11 @@ export default function HeroCanvas3D() {
 
     const animate = () => {
       animId = requestAnimationFrame(animate);
+
+      // Skip render workload if canvas is scrolled out of view to maintain 60fps across the website
+      if (!isCanvasVisible) {
+        return;
+      }
 
       // Rotate Sun & Corona
       sunMesh.rotation.y += 0.003;
@@ -641,76 +656,37 @@ export default function HeroCanvas3D() {
           focusedMesh.getWorldPosition(targetWorldPos);
 
           const ZOOM_DISTANCES: Record<string, number> = {
-            matahari: 4.6,
+            matahari: 4.8,
             merkurius: 0.95,
             venus: 1.35,
             bumi: 1.50,
             bulan: 0.58,
             mars: 1.10,
-            jupiter: 3.0,
-            saturnus: 4.4,
-            uranus: 2.4,
-            neptunus: 2.2,
+            jupiter: 3.2,
+            saturnus: 4.6,
+            uranus: 2.5,
+            neptunus: 2.3,
           };
 
           const zoomDistance =
             ZOOM_DISTANCES[activeSelected.id] ?? (activeSelected.size * 3.5 + 1.2);
 
-          // 2. Analytical Orbital Direction (Zero Lag, Zero Jitter)
-          // For the Moon, use Earth's world position as the solar orbital reference center
-          // so the camera offset frame glides smoothly without Moon-orbit wobbling!
-          let refCenterWorldPos = targetWorldPos;
-          if (activeSelected.id === "bulan") {
-            const earthNode = planetNodes.find((n) => n.body.id === "bumi");
-            if (earthNode) {
-              earthNode.mesh.getWorldPosition(refCenterPosVec);
-              refCenterWorldPos = refCenterPosVec;
-            }
-          }
+          // Subtle organic wave effect (gentle harmonic motion, zero jitter)
+          const waveTime = performance.now() * 0.001;
+          const waveUp = Math.sin(waveTime) * 0.006 * zoomDistance;
+          const waveSide = Math.cos(waveTime * 0.8) * 0.005 * zoomDistance;
 
-          const distToCenter = Math.hypot(refCenterWorldPos.x, refCenterWorldPos.z);
-          const radX = distToCenter > 0.01 ? refCenterWorldPos.x / distToCenter : 1;
-          const radZ = distToCenter > 0.01 ? refCenterWorldPos.z / distToCenter : 0;
-          const tanX = -radZ;
-          const tanZ = radX;
-
-          let baseCamX: number;
-          let baseCamY: number;
-          let baseCamZ: number;
-
-          if (activeSelected.id === "matahari") {
-            baseCamX = targetWorldPos.x + zoomDistance * 0.72;
-            baseCamY = targetWorldPos.y + zoomDistance * 0.38;
-            baseCamZ = targetWorldPos.z + zoomDistance * 1.15;
-          } else {
-            baseCamX = targetWorldPos.x - tanX * (zoomDistance * 0.85) + radX * (zoomDistance * 0.42);
-            baseCamY = targetWorldPos.y + zoomDistance * 0.35;
-            baseCamZ = targetWorldPos.z - tanZ * (zoomDistance * 0.85) + radZ * (zoomDistance * 0.42);
-          }
-
-          // Compute horizontal perpendicular vector analytically (zero jitter)
-          const forwardX = targetWorldPos.x - baseCamX;
-          const forwardZ = targetWorldPos.z - baseCamZ;
-          const fwdLen = Math.hypot(forwardX, forwardZ) || 1;
-          const rightX = -forwardZ / fwdLen;
-          const rightZ = forwardX / fwdLen;
-
-          // 3. Subtle Organic Wave Effect (ombak naik-turun dan sedikit kiri-bawah sangat lembut):
-          const waveTime = performance.now() * 0.0012;
-          const waveUp = Math.sin(waveTime) * 0.015 * zoomDistance;
-          const waveSide = Math.cos(waveTime * 0.8) * 0.012 * zoomDistance;
-          const waveDrop = (Math.sin(waveTime * 0.9) - 0.4) * 0.006 * zoomDistance;
-
+          // Stable celestial camera framing:
+          // In world space, position camera at an elevated front-view angle relative to the planet
           desiredCameraPos.set(
-            baseCamX + rightX * waveSide,
-            baseCamY + waveUp + waveDrop,
-            baseCamZ + rightZ * waveSide
+            targetWorldPos.x + waveSide,
+            targetWorldPos.y + zoomDistance * 0.36 + waveUp,
+            targetWorldPos.z + zoomDistance * 0.96
           );
 
-          // 4. Exact NDC Analytical Left-Side Framing
-          // Mathematically targets the exact horizontal screen coordinate x_target in NDC [-1, 1]
-          // On wide screens (laptop/desktop/fullscreen landscape), target is x = -0.34 (33% from left edge)
-          // On mobile portrait, target is x = 0.0 (center) and target y = +0.22 (upper viewport above sheet)
+          // Responsive framing:
+          // Desktop / PC (wide view): planet framed comfortably on the left (xTarget = -0.32, yTarget = 0.0)
+          // Mobile / Android (portrait): planet centered horizontally (xTarget = 0.0), lifted to upper viewport (yTarget = 0.20)
           const aspect =
             camera.aspect ||
             (canvasHolder.clientWidth || window.innerWidth) /
@@ -718,18 +694,16 @@ export default function HeroCanvas3D() {
           const isWideView = aspect > 1.15;
           const halfFovTan = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
 
-          const xTarget = isWideView ? -0.34 : 0.0;
-          const yTarget = isWideView ? 0.0 : 0.38;
+          const xTarget = isWideView ? -0.32 : 0.0;
+          const yTarget = isWideView ? 0.0 : 0.20;
 
-          // In Three.js projection: x_ndc = -shift_x / (D * halfFovTan * aspect)
-          // Thus: shiftDist = -xTarget * zoomDistance * halfFovTan * aspect
           const shiftDist = -xTarget * zoomDistance * halfFovTan * aspect;
           const vertDist = -yTarget * zoomDistance * halfFovTan;
 
           lookTarget.set(
-            targetWorldPos.x + rightX * shiftDist + rightX * (waveSide * 0.25),
-            targetWorldPos.y + vertDist + waveUp * 0.25,
-            targetWorldPos.z + rightZ * shiftDist + rightZ * (waveSide * 0.25)
+            targetWorldPos.x + shiftDist + waveSide,
+            targetWorldPos.y + vertDist + waveUp,
+            targetWorldPos.z
           );
 
           // When selection changes, smoothly bridge from current camera position
@@ -739,9 +713,9 @@ export default function HeroCanvas3D() {
             prevSelectedId = currentId;
           }
 
-          // Zero-lag tracking convergence: offsets decay to zero, locking camera to target with no micro-jitter
-          camOffset.multiplyScalar(0.92);
-          lookOffset.multiplyScalar(0.92);
+          // Zero-lag tracking convergence: offsets decay to zero smoothly
+          camOffset.multiplyScalar(0.90);
+          lookOffset.multiplyScalar(0.90);
 
           camera.position.copy(desiredCameraPos).add(camOffset);
           currentLookAt.copy(lookTarget).add(lookOffset);
@@ -758,8 +732,8 @@ export default function HeroCanvas3D() {
           prevSelectedId = null;
         }
 
-        camOffset.multiplyScalar(0.92);
-        lookOffset.multiplyScalar(0.92);
+        camOffset.multiplyScalar(0.90);
+        lookOffset.multiplyScalar(0.90);
 
         camera.position.copy(overviewCamPos).add(camOffset);
         currentLookAt.copy(overviewLookAt).add(lookOffset);
@@ -772,6 +746,7 @@ export default function HeroCanvas3D() {
     animate();
 
     return () => {
+      observer.disconnect();
       canvasHolder.removeEventListener("mousedown", onPointerDown);
       window.removeEventListener("mousemove", onPointerMove);
       window.removeEventListener("mouseup", onPointerUp);
@@ -829,10 +804,10 @@ export default function HeroCanvas3D() {
       className={`relative select-none overflow-hidden transition-all duration-500 ${
         isFullscreen
           ? "fixed inset-0 z-[9999] w-screen h-screen bg-[#030407]"
-          : "w-full h-[520px] sm:h-[600px] md:h-[680px] lg:h-[740px] xl:h-[780px] rounded-3xl bg-[#040508] border border-white/10 shadow-2xl"
+          : "w-full h-[460px] sm:h-[540px] md:h-[640px] lg:h-[720px] rounded-3xl bg-[#040508] border border-white/10 shadow-2xl"
       }`}
     >
-      {/* 3D WebGL Canvas Container: absolute inset-0 guarantees it always fills 100% of the box */}
+      {/* 3D WebGL Canvas Container */}
       <div
         ref={canvasHolderRef}
         className={`absolute inset-0 w-full h-full cursor-grab ${isDragging ? "cursor-grabbing" : ""}`}
@@ -840,32 +815,32 @@ export default function HeroCanvas3D() {
       />
 
       {/* Top Left: Astronomical HUD Badge */}
-      <div className="absolute top-4 left-4 z-20 flex items-center gap-2.5 px-4 py-2 sm:px-5 sm:py-2.5 rounded-full bg-black/80 backdrop-blur-md border border-white/10 font-mono text-xs sm:text-sm md:text-base text-zinc-300 pointer-events-none">
-        <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping" />
-        <span className="font-semibold text-white">Tata Surya 3D Realistis</span>
-        <span className="text-zinc-600">•</span>
-        <span className="text-cyber-cyan text-xs sm:text-sm font-semibold">Dynamic Tracking</span>
+      <div className="absolute top-3 left-3 sm:top-4 sm:left-4 z-20 flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-black/80 backdrop-blur-md border border-white/10 font-mono text-[11px] sm:text-xs md:text-sm text-zinc-300 pointer-events-none">
+        <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+        <span className="font-semibold text-white">Tata Surya 3D</span>
+        <span className="text-zinc-600 hidden sm:inline">•</span>
+        <span className="text-cyber-cyan text-[10px] sm:text-xs font-semibold hidden sm:inline">Tracking</span>
       </div>
 
       {/* Top Right Controls: Fullscreen Landscape (Mobile Only) + Reset */}
-      <div className="absolute top-4 right-4 z-20 flex items-center gap-2.5">
+      <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-20 flex items-center gap-2">
         {/* Fullscreen Landscape Toggle - Exclusively for Android / Mobile, HIDDEN on PC */}
         <button
           onClick={toggleFullscreen}
           className={`${
             isFullscreen ? "flex" : "flex md:hidden"
-          } items-center gap-2 px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl bg-black/80 hover:bg-white/15 text-white backdrop-blur-md border border-white/20 font-mono text-xs sm:text-sm font-semibold transition-all active:scale-95 shadow-lg`}
+          } items-center gap-1.5 px-2.5 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-black/80 hover:bg-white/15 text-white backdrop-blur-md border border-white/20 font-mono text-[11px] sm:text-xs font-semibold transition-all active:scale-95 shadow-md`}
           title={isFullscreen ? "Keluar Mode Layar Penuh" : "Mode Fullscreen Landscape (Layar Penuh Android)"}
         >
           {isFullscreen ? (
             <>
-              <Minimize2 className="w-4 h-4 text-amber-400" />
-              <span className="hidden sm:inline">Keluar Layar Penuh</span>
+              <Minimize2 className="w-3.5 h-3.5 text-amber-400" />
+              <span>Keluar</span>
             </>
           ) : (
             <>
-              <Maximize2 className="w-4 h-4 text-cyber-cyan" />
-              <span>Fullscreen Landscape</span>
+              <Maximize2 className="w-3.5 h-3.5 text-cyber-cyan" />
+              <span>Layar Penuh</span>
             </>
           )}
         </button>
@@ -874,61 +849,61 @@ export default function HeroCanvas3D() {
         {selectedBody && (
           <button
             onClick={() => handleSelectBody(null)}
-            className="flex items-center gap-2 px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/20 font-mono text-xs sm:text-sm md:text-base font-semibold transition-all active:scale-95 shadow-lg"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/20 font-mono text-[11px] sm:text-xs md:text-sm font-semibold transition-all active:scale-95 shadow-md"
             title="Kembali ke tampilan seluruh tata surya"
           >
-            <RotateCcw className="w-4 h-4 md:w-5 md:h-5 text-cyber-cyan" />
-            <span className="hidden sm:inline">Tata Surya (Reset)</span>
+            <RotateCcw className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyber-cyan" />
+            <span>Tata Surya</span>
           </button>
         )}
       </div>
 
       {/* Overview Drag Hint */}
       {!selectedBody && (
-        <div className="absolute top-16 right-4 z-20 px-3.5 py-2 rounded-xl bg-black/70 backdrop-blur-md border border-white/10 font-mono text-xs sm:text-sm text-zinc-300 pointer-events-none hidden sm:block">
-          KLIK PLANET UNTUK TRACKING ORBIT • DRAG 360°
+        <div className="absolute top-14 right-3 sm:top-16 sm:right-4 z-20 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-xl bg-black/70 backdrop-blur-md border border-white/10 font-mono text-[10px] sm:text-xs text-zinc-400 pointer-events-none hidden sm:block">
+          KLIK PLANET UNTUK TRACKING • DRAG 360°
         </div>
       )}
 
-      {/* Ultra-Detailed Scientific HUD Panel (Positioned on the RIGHT side so planet on the LEFT is unobstructed) */}
+      {/* Ultra-Detailed Scientific HUD Panel */}
       {selectedBody && showDetailCard && (
         <div
-          className={`absolute z-30 overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 text-white animate-in fade-in slide-in-from-right duration-300 ${
+          className={`absolute z-30 overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 text-white animate-in fade-in duration-300 ${
             isFullscreen
-              ? "top-16 right-4 sm:right-6 bottom-20 sm:bottom-24 w-[92vw] sm:w-[380px] md:w-[440px] lg:w-[480px] p-5 sm:p-6 lg:p-7 rounded-2xl sm:rounded-3xl bg-black/90 backdrop-blur-2xl border border-white/20 shadow-2xl space-y-4 sm:space-y-5"
-              : "bottom-20 left-3 right-3 max-h-[46vh] sm:max-h-none sm:top-16 sm:bottom-24 sm:left-auto sm:right-6 sm:w-[400px] md:w-[450px] lg:w-[480px] p-5 sm:p-6 lg:p-7 rounded-2xl sm:rounded-3xl bg-black/90 backdrop-blur-2xl border border-white/15 shadow-2xl space-y-4 sm:space-y-5"
+              ? "top-14 right-3 sm:right-6 bottom-16 sm:bottom-20 w-[94vw] sm:w-[380px] md:w-[420px] p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-black/90 backdrop-blur-2xl border border-white/20 shadow-2xl space-y-3 sm:space-y-4"
+              : "bottom-14 left-2.5 right-2.5 max-h-[42vh] sm:max-h-none sm:top-16 sm:bottom-24 sm:left-auto sm:right-6 sm:w-[380px] md:w-[420px] lg:w-[450px] p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-black/90 backdrop-blur-2xl border border-white/15 shadow-2xl space-y-3 sm:space-y-4"
           }`}
         >
           {/* Card Header */}
-          <div className="flex items-start justify-between gap-3 border-b border-white/10 pb-3">
+          <div className="flex items-start justify-between gap-3 border-b border-white/10 pb-2.5 sm:pb-3">
             <div>
-              <div className="flex items-center gap-2 mb-1 font-mono text-xs">
-                <span className="px-2.5 py-0.5 rounded-full bg-white/10 text-cyber-cyan font-semibold">
+              <div className="flex items-center gap-2 mb-1 font-mono text-[10px] sm:text-xs">
+                <span className="px-2 py-0.5 rounded-full bg-white/10 text-cyber-cyan font-semibold">
                   {selectedBody.type}
                 </span>
-                <span className="text-emerald-400 text-xs font-mono flex items-center gap-1.5">
+                <span className="text-emerald-400 text-[10px] sm:text-xs font-mono flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  Kamera Mengikuti Orbit
+                  Mengikuti Orbit
                 </span>
               </div>
-              <h3 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight flex items-center gap-2.5">
+              <h3 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight flex items-center gap-2">
                 <span>{selectedBody.name}</span>
                 <span
-                  className="w-3.5 h-3.5 rounded-full inline-block"
+                  className="w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full inline-block"
                   style={{
                     backgroundColor: `#${selectedBody.fallbackColor.toString(16).padStart(6, "0")}`,
                   }}
                 />
               </h3>
-              <p className="text-xs sm:text-sm md:text-base text-zinc-400 font-mono mt-0.5">{selectedBody.tagline}</p>
+              <p className="text-[11px] sm:text-xs md:text-sm text-zinc-400 font-mono mt-0.5">{selectedBody.tagline}</p>
             </div>
 
             <button
               onClick={() => handleSelectBody(null)}
-              className="p-2 sm:p-2.5 rounded-xl bg-white/5 hover:bg-white/15 text-zinc-400 hover:text-white transition-colors active:scale-95"
+              className="p-1.5 sm:p-2 rounded-xl bg-white/5 hover:bg-white/15 text-zinc-400 hover:text-white transition-colors active:scale-95"
               title="Tutup & kembali ke orbit overview"
             >
-              <X className="w-5 h-5 sm:w-6 sm:h-6" />
+              <X className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           </div>
 
@@ -938,13 +913,13 @@ export default function HeroCanvas3D() {
           </p>
 
           {/* Category Tabs: Ringkasan, Fisik, Orbit */}
-          <div className="flex items-center gap-1.5 p-1.5 rounded-xl bg-white/5 border border-white/10 font-mono text-xs sm:text-sm md:text-base">
+          <div className="flex items-center gap-1 p-1 rounded-xl bg-white/5 border border-white/10 font-mono text-[11px] sm:text-xs md:text-sm">
             <button
               onClick={() => {
                 setActiveTab("ringkasan");
                 playClickSound();
               }}
-              className={`flex-1 py-2 rounded-lg transition-all font-semibold ${
+              className={`flex-1 py-1.5 sm:py-2 rounded-lg transition-all font-semibold ${
                 activeTab === "ringkasan" ? "bg-white text-black font-bold shadow" : "text-zinc-400 hover:text-white"
               }`}
             >
@@ -955,7 +930,7 @@ export default function HeroCanvas3D() {
                 setActiveTab("fisik");
                 playClickSound();
               }}
-              className={`flex-1 py-2 rounded-lg transition-all font-semibold ${
+              className={`flex-1 py-1.5 sm:py-2 rounded-lg transition-all font-semibold ${
                 activeTab === "fisik" ? "bg-white text-black font-bold shadow" : "text-zinc-400 hover:text-white"
               }`}
             >
@@ -966,7 +941,7 @@ export default function HeroCanvas3D() {
                 setActiveTab("orbit");
                 playClickSound();
               }}
-              className={`flex-1 py-2 rounded-lg transition-all font-semibold ${
+              className={`flex-1 py-1.5 sm:py-2 rounded-lg transition-all font-semibold ${
                 activeTab === "orbit" ? "bg-white text-black font-bold shadow" : "text-zinc-400 hover:text-white"
               }`}
             >
@@ -1150,9 +1125,9 @@ export default function HeroCanvas3D() {
       )}
 
       {/* Bottom Floating Control Bar */}
-      <div className="absolute bottom-4 left-4 right-4 z-20 flex items-center justify-between gap-3 pointer-events-auto">
+      <div className="absolute bottom-2.5 left-2.5 right-2.5 sm:bottom-4 sm:left-4 sm:right-4 z-20 flex items-center justify-between gap-2 sm:gap-3 pointer-events-auto">
         {/* Planet Quick Selector Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto py-2 px-2.5 sm:px-3 bg-black/80 backdrop-blur-md rounded-2xl border border-white/10 font-mono text-xs sm:text-sm md:text-base max-w-[70%] sm:max-w-[78%] scrollbar-none">
+        <div className="flex items-center gap-1 sm:gap-1.5 overflow-x-auto py-1.5 px-2 sm:py-2 sm:px-3 bg-black/80 backdrop-blur-md rounded-xl sm:rounded-2xl border border-white/10 font-mono text-[11px] sm:text-xs md:text-sm max-w-[66%] sm:max-w-[76%] scrollbar-none">
           {allBodies.map((body) => {
             const isSelected = selectedBody?.id === body.id;
             return (
@@ -1165,14 +1140,14 @@ export default function HeroCanvas3D() {
                     handleSelectBody(body);
                   }
                 }}
-                className={`px-3 py-1.5 sm:px-3.5 sm:py-2 md:px-4 md:py-2.5 rounded-xl whitespace-nowrap transition-all flex items-center gap-2 ${
+                className={`px-2.5 py-1 sm:px-3 sm:py-1.5 md:px-3.5 md:py-2 rounded-lg sm:rounded-xl whitespace-nowrap transition-all flex items-center gap-1.5 ${
                   isSelected
                     ? "bg-white text-black font-bold shadow-md scale-105"
                     : "text-zinc-400 hover:text-white hover:bg-white/10"
                 }`}
               >
                 <span
-                  className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full inline-block flex-shrink-0"
+                  className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full inline-block flex-shrink-0"
                   style={{
                     backgroundColor: `#${body.fallbackColor.toString(16).padStart(6, "0")}`,
                   }}
@@ -1184,17 +1159,17 @@ export default function HeroCanvas3D() {
         </div>
 
         {/* Orbit Speed & Play/Pause Controls */}
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
           {/* Speed Toggle (1x / 2x / 0.5x) */}
           <button
             onClick={() => {
               playClickSound();
               setOrbitSpeedFactor((prev) => (prev === 1.0 ? 2.0 : prev === 2.0 ? 0.5 : 1.0));
             }}
-            className="px-3 py-2 sm:px-4 sm:py-2.5 md:px-5 md:py-3 rounded-xl font-mono text-xs sm:text-sm md:text-base font-semibold bg-black/80 hover:bg-white/15 text-zinc-200 hover:text-white backdrop-blur-md border border-white/15 transition-all shadow-md active:scale-95"
+            className="px-2.5 py-1.5 sm:px-3.5 sm:py-2 md:px-4 md:py-2.5 rounded-xl font-mono text-[11px] sm:text-xs md:text-sm font-semibold bg-black/80 hover:bg-white/15 text-zinc-200 hover:text-white backdrop-blur-md border border-white/15 transition-all shadow-md active:scale-95"
             title="Ubah kecepatan orbit simulasi"
           >
-            {orbitSpeedFactor}x Speed
+            {orbitSpeedFactor}x
           </button>
 
           {/* Orbit Play / Pause Button */}
@@ -1203,14 +1178,14 @@ export default function HeroCanvas3D() {
               setIsPlaying(!isPlaying);
               playClickSound();
             }}
-            className={`flex items-center gap-2 px-3.5 py-2 sm:px-4 sm:py-2.5 md:px-5 md:py-3 rounded-xl font-mono text-xs sm:text-sm md:text-base font-semibold backdrop-blur-md border transition-all shadow-md active:scale-95 ${
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3.5 sm:py-2 md:px-4 md:py-2.5 rounded-xl font-mono text-[11px] sm:text-xs md:text-sm font-semibold backdrop-blur-md border transition-all shadow-md active:scale-95 ${
               isPlaying
                 ? "bg-white/15 text-white border-white/20 hover:bg-white/25"
                 : "bg-amber-400/20 text-amber-300 border-amber-400/40 hover:bg-amber-400/30"
             }`}
             title={isPlaying ? "Jeda rotasi & orbit" : "Lanjutkan rotasi & orbit"}
           >
-            {isPlaying ? <Pause className="w-4 h-4 md:w-5 md:h-5" /> : <Play className="w-4 h-4 md:w-5 md:h-5 fill-current" />}
+            {isPlaying ? <Pause className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <Play className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" />}
             <span className="hidden sm:inline">{isPlaying ? "Pause" : "Play"}</span>
           </button>
         </div>

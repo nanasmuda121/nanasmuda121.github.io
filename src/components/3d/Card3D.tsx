@@ -13,7 +13,7 @@ interface Card3DProps {
 export default function Card3D({
   children,
   className = "",
-  maxRotation = 14,
+  maxRotation = 10,
   glare = true,
   onClick,
 }: Card3DProps) {
@@ -23,6 +23,10 @@ export default function Card3D({
   const [isHovered, setIsHovered] = useState(false);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Only execute 3D tilt calculations for fine pointer (desktop mouse)
+    if (typeof window !== "undefined" && !window.matchMedia("(pointer: fine)").matches) {
+      return;
+    }
     if (!cardRef.current) return;
     const rect = cardRef.current.getBoundingClientRect();
     const width = rect.width;
@@ -46,6 +50,9 @@ export default function Card3D({
   };
 
   const handleMouseEnter = () => {
+    if (typeof window !== "undefined" && !window.matchMedia("(pointer: fine)").matches) {
+      return;
+    }
     setIsHovered(true);
   };
 
@@ -68,19 +75,19 @@ export default function Card3D({
         onMouseLeave={handleMouseLeave}
         style={{
           transform: `rotateX(${rotation.x}deg) rotateY(${rotation.y}deg) ${
-            isHovered ? "translateZ(12px)" : "translateZ(0px)"
+            isHovered ? "translateZ(10px)" : "translateZ(0px)"
           }`,
           transformStyle: "preserve-3d",
           transition: isHovered
             ? "transform 0.08s ease-out"
             : "transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
         }}
-        className={`relative overflow-hidden rounded-xl border border-white/10 bg-[#0c0e17]/80 backdrop-blur-md transition-shadow hover:shadow-[0_20px_50px_rgba(0,0,0,0.8)] ${className}`}
+        className={`relative overflow-hidden rounded-2xl border border-white/10 bg-[#0c0e17]/95 md:backdrop-blur-md transition-shadow hover:shadow-[0_20px_50px_rgba(0,0,0,0.8)] ${className}`}
       >
-        {/* Dynamic 3D Glare Highlight */}
+        {/* Dynamic 3D Glare Highlight (desktop only) */}
         {glare && (
           <div
-            className="pointer-events-none absolute inset-0 transition-opacity duration-300 z-30"
+            className="pointer-events-none absolute inset-0 transition-opacity duration-300 z-30 hidden md:block"
             style={{
               opacity: glarePosition.opacity,
               background: `radial-gradient(circle 320px at ${glarePosition.x}% ${glarePosition.y}%, rgba(255, 255, 255, 0.25), transparent 70%)`,
