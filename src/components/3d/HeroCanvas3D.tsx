@@ -570,26 +570,31 @@ export default function HeroCanvas3D() {
           // 1. Get real-time moving world position of the planet
           focusedMesh.getWorldPosition(targetWorldPos);
 
-          // Calculate effective visual radius (accounting for rings, moon orbit, and corona)
-          let effectiveRadius = activeSelected.size;
-          if (activeSelected.hasRing && activeSelected.ringOuter) {
-            effectiveRadius = activeSelected.ringOuter;
-          } else if (activeSelected.hasMoon) {
-            effectiveRadius = activeSelected.size + 0.32;
-          } else if (activeSelected.id === "matahari") {
-            effectiveRadius = activeSelected.size * 1.15;
-          }
+          // Calibrated zoom distances:
+          // - Large bodies (Matahari, Jupiter, Saturnus) are NOT too zoomed in / kept at comfortable distances
+          // - Small planets (Merkurius, Mars) are zoomed in enough to see surface features without being oversized
+          // - Bumi is framed together with its orbiting Moon
+          // - Saturnus & Uranus include full clearance for their 3D ring systems
+          const ZOOM_DISTANCES: Record<string, number> = {
+            matahari: 5.2,
+            merkurius: 1.25,
+            venus: 1.65,
+            bumi: 1.95,
+            mars: 1.45,
+            jupiter: 3.6,
+            saturnus: 5.4,
+            uranus: 3.6,
+            neptunus: 2.2,
+          };
 
-          // Calibrated zoom distance: small planets (Merkurius, Mars, Bumi) are crisp and not sunken,
-          // while large planets (Jupiter, Saturnus with rings) and Sun fit comfortably without overflowing
-          const zoomDistance = effectiveRadius * 2.35 + 0.38;
+          const zoomDistance = ZOOM_DISTANCES[activeSelected.id] ?? (activeSelected.size * 3.5 + 1.2);
 
           // 2. Dynamic formation flight camera position following the orbiting planet
           if (activeSelected.id === "matahari") {
             desiredCameraPos.set(
-              targetWorldPos.x + zoomDistance * 0.75,
-              targetWorldPos.y + zoomDistance * 0.4,
-              targetWorldPos.z + zoomDistance * 1.2
+              targetWorldPos.x + zoomDistance * 0.72,
+              targetWorldPos.y + zoomDistance * 0.38,
+              targetWorldPos.z + zoomDistance * 1.15
             );
           } else {
             // Calculate orbital tangent and radial vector for cinematic following angle
@@ -600,9 +605,9 @@ export default function HeroCanvas3D() {
             const tangentZ = radialX;
 
             desiredCameraPos.set(
-              targetWorldPos.x - tangentX * (zoomDistance * 0.85) + radialX * (zoomDistance * 0.45),
-              targetWorldPos.y + zoomDistance * 0.38,
-              targetWorldPos.z - tangentZ * (zoomDistance * 0.85) + radialZ * (zoomDistance * 0.45)
+              targetWorldPos.x - tangentX * (zoomDistance * 0.85) + radialX * (zoomDistance * 0.42),
+              targetWorldPos.y + zoomDistance * 0.35,
+              targetWorldPos.z - tangentZ * (zoomDistance * 0.85) + radialZ * (zoomDistance * 0.42)
             );
           }
 
@@ -610,7 +615,7 @@ export default function HeroCanvas3D() {
             camera.position.lerp(desiredCameraPos, 0.08);
           }
 
-          // 3. FRAME THE PLANET FURTHER TO THE LEFT:
+          // 3. FRAME THE PLANET NATURALLY ON THE LEFT (around 30%-35% from left edge, avoiding extreme edges):
           const camForward = new THREE.Vector3()
             .subVectors(targetWorldPos, camera.position)
             .normalize();
@@ -622,9 +627,9 @@ export default function HeroCanvas3D() {
             camRight.set(1, 0, 0);
           }
 
-          // Shift look-at target to the RIGHT so the planet sits cleanly on the LEFT (around 22%-26% from left edge)
+          // Moderate shift factor: planet sits comfortably in the left half with plenty of breathing room
           const isWideView = (canvasHolder.clientWidth || window.innerWidth) > 768;
-          const shiftFactor = isWideView ? 0.88 : 0.52;
+          const shiftFactor = isWideView ? 0.38 : 0.22;
           const shiftOffset = camRight.clone().multiplyScalar(zoomDistance * shiftFactor);
 
           lookTarget.copy(targetWorldPos).add(shiftOffset);
@@ -766,8 +771,8 @@ export default function HeroCanvas3D() {
         <div
           className={`absolute z-30 overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 text-white animate-in fade-in slide-in-from-right duration-300 ${
             isFullscreen
-              ? "top-16 right-4 bottom-20 w-[92vw] sm:w-[420px] p-5 rounded-2xl bg-black/90 backdrop-blur-2xl border border-white/20 shadow-2xl space-y-4"
-              : "top-16 right-4 bottom-20 w-[92vw] sm:w-[380px] p-4 sm:p-5 rounded-2xl bg-black/85 backdrop-blur-xl border border-white/15 shadow-2xl space-y-3.5"
+              ? "top-16 right-4 bottom-20 w-[92vw] sm:w-[380px] p-5 rounded-2xl bg-black/90 backdrop-blur-2xl border border-white/20 shadow-2xl space-y-4"
+              : "top-16 right-4 bottom-20 w-[90vw] sm:w-[340px] md:w-[360px] p-4 sm:p-5 rounded-2xl bg-black/85 backdrop-blur-xl border border-white/15 shadow-2xl space-y-3.5"
           }`}
         >
           {/* Card Header */}
