@@ -22,7 +22,7 @@ export default function HeroSection() {
         className="flex items-center justify-between font-mono text-xs sm:text-sm md:text-base text-[var(--text-secondary)] border-b border-white/10 pb-3.5"
       >
         <div className="flex items-center gap-2.5 sm:gap-3">
-          <span className="w-2.5 h-2.5 rounded-full bg-[var(--success-color)] animate-pulse" />
+          <span className="w-2.5 h-2.5 rounded-full bg-[var(--success-color)]" />
           <span className="text-white font-semibold tracking-wider">DEEP SPACE OBSERVATORY</span>
           <span className="text-zinc-600">•</span>
           <span className="text-[var(--text-secondary)]">WA: {identity.phone}</span>

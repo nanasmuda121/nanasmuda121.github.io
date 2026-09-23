@@ -57,7 +57,7 @@ export default function ContactSection() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
           <div className="lg:col-span-7 space-y-5">
             <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 font-mono text-xs sm:text-sm md:text-base text-emerald-400">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
               <span className="font-semibold tracking-wide">SATELIT KOMUNIKASI AKTIF • SIAP TRANSAKSI</span>
             </div>
 

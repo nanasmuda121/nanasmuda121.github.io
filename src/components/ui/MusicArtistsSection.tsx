@@ -60,7 +60,7 @@ export default function MusicArtistsSection() {
       <motion.div {...fadeUp} className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-8 border-b border-white/10">
         <div className="space-y-3">
           <div className="inline-flex items-center gap-2 font-mono text-[11px] tracking-wider text-emerald-400">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="w-2 h-2 rounded-full bg-emerald-400" />
             <span>// FREKUENSI • RADIO ORBITAL</span>
           </div>
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight">
@@ -197,7 +197,7 @@ export default function MusicArtistsSection() {
           >
             <div className="flex items-center justify-between gap-3 font-mono text-xs sm:text-sm px-1 pb-3">
               <div className="flex items-center gap-2.5 min-w-0">
-                <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                <span className="w-2 h-2 rounded-full bg-red-500" />
                 <span className="text-white font-bold truncate">{playing.title}</span>
                 <span className="text-zinc-500 truncate hidden sm:inline">{playing.sub}</span>
               </div>

@@ -39,7 +39,7 @@ export default function Navbar() {
               <span className="text-sm sm:text-base font-black tracking-tight text-white group-hover:text-cyber-cyan transition-colors">
                 {PORTFOLIO_DATA.identity.fullName}
               </span>
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse hidden sm:inline-block" />
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 hidden sm:inline-block" />
             </div>
             <span className="text-[11px] font-mono text-zinc-400">
               Orbital Lab • Digital Products

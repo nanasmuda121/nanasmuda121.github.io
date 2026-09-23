@@ -40,7 +40,7 @@ export default function ProductCatalog() {
       >
         <div>
           <div className="flex items-center gap-2.5 font-mono text-xs sm:text-sm md:text-base text-cyber-cyan mb-2">
-            <span className="w-2 h-2 bg-cyber-cyan rounded-full animate-pulse" />
+            <span className="w-2 h-2 bg-cyber-cyan rounded-full" />
             <span className="font-semibold tracking-wider">STASIUN SOURCE CODE &amp; ARTEFAK DIGITAL</span>
           </div>
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight">
