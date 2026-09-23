@@ -4,7 +4,6 @@ import React from "react";
 import Navbar from "@/components/ui/Navbar";
 import HeroSection from "@/components/ui/HeroSection";
 import ProductCatalog from "@/components/ui/ProductCatalog";
-import MusicArtistsSection from "@/components/ui/MusicArtistsSection";
 import ContactSection from "@/components/ui/ContactSection";
 import Footer from "@/components/ui/Footer";
 
@@ -23,7 +22,6 @@ export default function HomePage() {
       <main className="relative z-10 space-y-4">
         <HeroSection />
         <ProductCatalog />
-        <MusicArtistsSection />
         <ContactSection />
       </main>
 

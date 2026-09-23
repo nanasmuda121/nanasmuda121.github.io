@@ -13,7 +13,6 @@ export default function Navbar() {
 
   const navLinks = [
     { href: "#catalog", label: "Katalog Produk" },
-    { href: "#music", label: "Musik Favorit" },
     { href: "#faq", label: "Cara Beli & FAQ" },
   ];
 

@@ -4,7 +4,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import HeroCanvas3D from "@/components/3d/HeroCanvas3D";
 import { PORTFOLIO_DATA } from "@/data/portfolioData";
-import { ArrowDown, MessageCircle, Check } from "lucide-react";
+import { ArrowDown, MessageCircle } from "lucide-react";
 import { playClickSound } from "@/utils/audio";
 
 const ease = [0.4, 0, 0.2, 1] as const;
@@ -14,26 +14,6 @@ export default function HeroSection() {
 
   return (
     <section className="relative pt-24 pb-12 md:pt-36 md:pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto overflow-hidden space-y-7 sm:space-y-9">
-      {/* Top Telemetry Ribbon */}
-      <motion.div
-        initial={{ opacity: 0, y: -8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease }}
-        className="flex items-center justify-between font-mono text-xs sm:text-sm md:text-base text-[var(--text-secondary)] border-b border-white/10 pb-3.5"
-      >
-        <div className="flex items-center gap-2.5 sm:gap-3">
-          <span className="w-2.5 h-2.5 rounded-full bg-[var(--success-color)]" />
-          <span className="text-white font-semibold tracking-wider">DEEP SPACE OBSERVATORY</span>
-          <span className="text-zinc-600">•</span>
-          <span className="text-[var(--text-secondary)]">WA: {identity.phone}</span>
-        </div>
-        <div className="hidden sm:flex items-center gap-3 text-xs sm:text-sm">
-          <span className="text-zinc-400">SIMULASI TATA SURYA &amp; ROKET</span>
-          <span className="text-zinc-600">•</span>
-          <span className="text-[var(--accent-blue)] font-semibold">FULL SOURCE CODE</span>
-        </div>
-      </motion.div>
-
       {/* Main Hero Header */}
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 sm:gap-8">
         <div className="space-y-3 sm:space-y-4 max-w-4xl">
@@ -103,23 +83,6 @@ export default function HeroSection() {
           </a>
         </motion.div>
       </div>
-
-      {/* Guarantee Badges Ribbon */}
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease, delay: 0.44 }}
-        className="flex flex-wrap items-center gap-4 sm:gap-8 pt-1 pb-1 font-mono text-xs sm:text-sm md:text-base text-zinc-300"
-      >
-        {(identity.guarantees || ["Full Source Code", "Siap Build APK/Web", "Fast Response WA"]).map(
-          (g) => (
-            <div key={g} className="flex items-center gap-2 sm:gap-2.5">
-              <Check className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400 flex-shrink-0" />
-              <span>{g}</span>
-            </div>
-          )
-        )}
-      </motion.div>
 
       {/* Centerpiece: Full-Width 3D Solar System Experience */}
       <motion.div
