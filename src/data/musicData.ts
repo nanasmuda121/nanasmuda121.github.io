@@ -139,11 +139,11 @@ export const FAVORITE_TRACKS: FavoriteTrack[] = [
   },
   {
     id: "track-3",
-    title: "Take Note",
-    artist: "Juice WRLD",
-    duration: "2:29",
-    genre: "Emo Rap",
-    cover: "/artists/juicewrld.jpg",
+    title: "Relax and Take Notes",
+    artist: "Ice Cube",
+    duration: "3:08",
+    genre: "West Coast",
+    cover: "/artists/icecube.jpg",
   },
   {
     id: "track-4",
