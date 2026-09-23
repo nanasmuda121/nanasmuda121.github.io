@@ -118,88 +118,72 @@ export default function MusicArtistsSection() {
         </div>
       </motion.div>
 
-      <AnimatePresence mode="wait">
-        {activeTab === "artists" ? (
-          <motion.div
-            key="artists"
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -12 }}
-            transition={{ duration: 0.4, ease }}
-            className="space-y-5"
-          >
-            <SwipeDeck<Artist>
-              items={FAVORITE_ARTISTS}
-              current={artistIndex}
-              onSelect={setArtistIndex}
-              className="h-[430px] sm:h-[470px]"
-              renderCard={(artist: Artist, isTop: boolean, index: number, total: number) => (
-                <ArtistCard
-                  artist={artist}
-                  isTop={isTop}
-                  index={index}
-                  total={total}
-                  isPlaying={isPlaying(artist.videoId)}
-                  onPlay={() =>
-                    playItem({
-                      videoId: artist.videoId,
-                      title: `${artist.highlightSong} — ${artist.name}`,
-                      sub: "YouTube",
-                      query: `${artist.name} ${artist.highlightSong}`,
-                    })
-                  }
-                  onMore={() => window.open(artist.link, "_blank")}
-                />
-              )}
-            />
+      <div className="relative">
+        <div className={activeTab === "artists" ? "space-y-5" : "hidden"}>
+          <SwipeDeck<Artist>
+            items={FAVORITE_ARTISTS}
+            current={artistIndex}
+            onSelect={setArtistIndex}
+            className="h-[430px] sm:h-[470px]"
+            renderCard={(artist: Artist, isTop: boolean, index: number, total: number) => (
+              <ArtistCard
+                artist={artist}
+                isTop={isTop}
+                index={index}
+                total={total}
+                isPlaying={isPlaying(artist.videoId)}
+                onPlay={() =>
+                  playItem({
+                    videoId: artist.videoId,
+                    title: `${artist.highlightSong} — ${artist.name}`,
+                    sub: "YouTube",
+                    query: `${artist.name} ${artist.highlightSong}`,
+                  })
+                }
+                onMore={() => window.open(artist.link, "_blank")}
+              />
+            )}
+          />
 
-            <DeckControls
-              index={artistIndex}
-              total={FAVORITE_ARTISTS.length}
-              onChange={setArtistIndex}
-            />
-          </motion.div>
-        ) : (
-          <motion.div
-            key="tracks"
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -12 }}
-            transition={{ duration: 0.4, ease }}
-            className="space-y-5"
-          >
-            <SwipeDeck<FavoriteTrack>
-              items={FAVORITE_TRACKS}
-              current={trackIndex}
-              onSelect={setTrackIndex}
-              className="h-[380px] sm:h-[400px]"
-              renderCard={(track: FavoriteTrack, isTop: boolean, index: number, total: number) => (
-                <TrackCard
-                  track={track}
-                  isTop={isTop}
-                  index={index}
-                  total={total}
-                  isPlaying={isPlaying(track.videoId)}
-                  onPlay={() =>
-                    playItem({
-                      videoId: track.videoId,
-                      title: track.title,
-                      sub: track.artist,
-                      query: `${track.title} ${track.artist ?? ""}`,
-                    })
-                  }
-                />
-              )}
-            />
+          <DeckControls
+            index={artistIndex}
+            total={FAVORITE_ARTISTS.length}
+            onChange={setArtistIndex}
+          />
+        </div>
 
-            <DeckControls
-              index={trackIndex}
-              total={FAVORITE_TRACKS.length}
-              onChange={setTrackIndex}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
+        <div className={activeTab === "tracks" ? "space-y-5" : "hidden"}>
+          <SwipeDeck<FavoriteTrack>
+            items={FAVORITE_TRACKS}
+            current={trackIndex}
+            onSelect={setTrackIndex}
+            className="h-[380px] sm:h-[400px]"
+            renderCard={(track: FavoriteTrack, isTop: boolean, index: number, total: number) => (
+              <TrackCard
+                track={track}
+                isTop={isTop}
+                index={index}
+                total={total}
+                isPlaying={isPlaying(track.videoId)}
+                onPlay={() =>
+                  playItem({
+                    videoId: track.videoId,
+                    title: track.title,
+                    sub: track.artist,
+                    query: `${track.title} ${track.artist ?? ""}`,
+                  })
+                }
+              />
+            )}
+          />
+
+          <DeckControls
+            index={trackIndex}
+            total={FAVORITE_TRACKS.length}
+            onChange={setTrackIndex}
+          />
+        </div>
+      </div>
 
       {/* Transparent YouTube embed player */}
       <AnimatePresence>

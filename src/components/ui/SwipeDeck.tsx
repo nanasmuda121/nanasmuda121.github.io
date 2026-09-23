@@ -42,8 +42,7 @@ function DeckCard<T extends DeckCardBase>({
   const fan = level === 0 ? 0 : level === 1 ? -2 : 2;
 
   const fly = (dir: 1 | -1) => {
-    animate(x, dir * 700, { type: "spring", stiffness: 240, damping: 24 }).then(() => {
-      x.set(0);
+    animate(x, dir * 700, { duration: 0.3, ease }).then(() => {
       onSwipe(dir);
     });
   };
