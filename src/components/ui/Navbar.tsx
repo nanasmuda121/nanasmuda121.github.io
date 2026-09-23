@@ -31,7 +31,7 @@ export default function Navbar() {
           onClick={() => playClickSound()}
           className="flex items-center gap-3 group"
         >
-          <div className="w-10 h-10 rounded-xl bg-[#0b0f24] border border-cyber-cyan/30 flex items-center justify-center font-mono font-bold text-sm text-cyber-cyan group-hover:border-cyber-cyan group-hover:shadow-[0_0_15px_rgba(0,240,255,0.3)] transition-all shadow">
+          <div className="w-10 h-10 rounded bg-dark-850 border border-cyber-cyan/30 flex items-center justify-center font-mono font-bold text-sm text-cyber-cyan group-hover:border-cyber-cyan group-hover:shadow-[0_0_15px_rgba(0,240,255,0.3)] transition-all shadow">
             {PORTFOLIO_DATA.identity.initials}
           </div>
           <div className="flex flex-col">
@@ -54,7 +54,7 @@ export default function Navbar() {
               key={link.href}
               href={link.href}
               onClick={() => playClickSound()}
-              className="px-4 py-2 rounded-xl hover:text-white hover:bg-white/10 transition-colors font-medium"
+              className="px-4 py-2 rounded hover:text-white hover:bg-white/10 transition-colors font-medium"
             >
               {link.label}
             </a>
@@ -68,7 +68,7 @@ export default function Navbar() {
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => playClickSound()}
-            className="flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs sm:text-sm font-mono font-bold hover:bg-emerald-500/25 transition-all active:scale-95 shadow-sm"
+            className="flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs sm:text-sm font-mono font-bold hover:bg-emerald-500/25 transition-all active:scale-95 shadow-sm"
           >
             <MessageCircle className="w-4 h-4" />
             <span className="hidden sm:inline">WhatsApp</span>
@@ -80,7 +80,7 @@ export default function Navbar() {
               playClickSound();
               setMobileMenuOpen(!mobileMenuOpen);
             }}
-            className="md:hidden p-2 rounded-xl bg-white/5 border border-white/10 text-zinc-300 hover:text-white"
+            className="md:hidden p-2 rounded bg-white/5 border border-white/10 text-zinc-300 hover:text-white"
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
@@ -95,7 +95,7 @@ export default function Navbar() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -8, scale: 0.98 }}
             transition={{ duration: 0.25, ease }}
-            className="pointer-events-auto md:hidden fixed top-20 left-4 right-4 bg-[#090b14]/95 backdrop-blur-2xl border border-white/15 rounded p-4 shadow-2xl space-y-2 z-50 font-mono text-sm"
+            className="pointer-events-auto md:hidden fixed top-20 left-4 right-4 bg-dark-900/95 backdrop-blur-2xl border border-white/15 rounded p-4 shadow-2xl space-y-2 z-50 font-mono text-sm"
           >
             {navLinks.map((link) => (
               <a
@@ -105,7 +105,7 @@ export default function Navbar() {
                   playClickSound();
                   setMobileMenuOpen(false);
                 }}
-                className="block px-4 py-2.5 text-zinc-300 hover:text-white hover:bg-white/5 rounded-xl"
+                className="block px-4 py-2.5 text-zinc-300 hover:text-white hover:bg-white/5 rounded"
               >
                 {link.label}
               </a>

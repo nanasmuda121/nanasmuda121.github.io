@@ -80,14 +80,14 @@ export default function MusicArtistsSection() {
               setPlaying(null);
               playClickSound();
             }}
-            className={`relative px-4 py-2.5 rounded-xl transition-colors flex items-center gap-2 font-bold ${
+            className={`relative px-4 py-2.5 rounded transition-colors flex items-center gap-2 font-bold ${
               activeTab === "artists" ? "text-black" : "text-zinc-400 hover:text-white"
             }`}
           >
             {activeTab === "artists" && (
               <motion.span
                 layoutId="music-tab"
-                className="absolute inset-0 bg-white rounded-xl shadow-md"
+                className="absolute inset-0 bg-white rounded shadow-md"
                 transition={{ duration: 0.35, ease }}
               />
             )}
@@ -101,14 +101,14 @@ export default function MusicArtistsSection() {
               setPlaying(null);
               playClickSound();
             }}
-            className={`relative px-4 py-2.5 rounded-xl transition-colors flex items-center gap-2 font-bold ${
+            className={`relative px-4 py-2.5 rounded transition-colors flex items-center gap-2 font-bold ${
               activeTab === "tracks" ? "text-black" : "text-zinc-400 hover:text-white"
             }`}
           >
             {activeTab === "tracks" && (
               <motion.span
                 layoutId="music-tab"
-                className="absolute inset-0 bg-white rounded-xl shadow-md"
+                className="absolute inset-0 bg-white rounded shadow-md"
                 transition={{ duration: 0.35, ease }}
               />
             )}
@@ -206,7 +206,7 @@ export default function MusicArtistsSection() {
                   href={`https://www.youtube.com/watch?v=${playing.videoId}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-zinc-300 hover:text-white hover:bg-white/10 transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-white/5 border border-white/10 text-zinc-300 hover:text-white hover:bg-white/10 transition-colors"
                 >
                   <ExternalLink className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">Buka di YouTube</span>
@@ -216,7 +216,7 @@ export default function MusicArtistsSection() {
                     setPlaying(null);
                     playClickSound();
                   }}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/15 border border-red-500/30 text-red-300 hover:bg-red-500/30 transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-red-500/15 border border-red-500/30 text-red-300 hover:bg-red-500/30 transition-colors"
                 >
                   <X className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">Tutup</span>
@@ -224,7 +224,7 @@ export default function MusicArtistsSection() {
               </div>
             </div>
 
-            <div className="overflow-hidden rounded border border-white/10 bg-[#0b0e16] shadow-2xl">
+            <div className="overflow-hidden rounded border border-white/10 bg-dark-900 shadow-2xl">
               <iframe
                 key={playing.videoId}
                 src={`https://www.youtube-nocookie.com/embed/${playing.videoId}?autoplay=1&rel=0&playsinline=1`}
@@ -281,7 +281,7 @@ function DeckControls({
             prev();
           }}
           aria-label="Kartu sebelumnya"
-          className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-zinc-300 hover:text-white hover:bg-white/10 flex items-center justify-center transition-all active:scale-90"
+          className="w-10 h-10 rounded bg-white/5 border border-white/10 text-zinc-300 hover:text-white hover:bg-white/10 flex items-center justify-center transition-all active:scale-90"
         >
           <ChevronLeft className="w-4 h-4" />
         </button>
@@ -292,7 +292,7 @@ function DeckControls({
             shuffle();
           }}
           aria-label="Acak kartu"
-          className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-zinc-300 hover:text-white hover:bg-white/10 flex items-center justify-center transition-all active:scale-90"
+          className="w-10 h-10 rounded bg-white/5 border border-white/10 text-zinc-300 hover:text-white hover:bg-white/10 flex items-center justify-center transition-all active:scale-90"
         >
           <Shuffle className="w-4 h-4" />
         </button>
@@ -303,7 +303,7 @@ function DeckControls({
             next();
           }}
           aria-label="Kartu berikutnya"
-          className="w-10 h-10 rounded-xl bg-cyber-cyan/15 border border-cyber-cyan/30 text-cyber-cyan hover:bg-cyber-cyan/25 flex items-center justify-center transition-all active:scale-90"
+          className="w-10 h-10 rounded bg-cyber-cyan/15 border border-cyber-cyan/30 text-cyber-cyan hover:bg-cyber-cyan/25 flex items-center justify-center transition-all active:scale-90"
         >
           <ChevronRight className="w-4 h-4" />
         </button>
@@ -330,7 +330,7 @@ function ArtistCard({
   onMore: () => void;
 }) {
   return (
-    <div className="relative h-full w-full overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#070a12] shadow-2xl">
+    <div className="relative h-full w-full overflow-hidden rounded border border-white/10 bg-dark-900 shadow-2xl">
       <img
         src={artist.image}
         alt={artist.name}
@@ -342,11 +342,11 @@ function ArtistCard({
 
       {/* Top badges */}
       <div className="absolute top-4 left-4 right-4 flex items-start justify-between pointer-events-none">
-        <span className="font-mono text-[11px] font-bold px-2.5 py-1 rounded-lg bg-black/55 backdrop-blur-md border border-white/10 text-zinc-300">
+        <span className="font-mono text-[11px] font-bold px-2.5 py-1 rounded bg-black/55 backdrop-blur-md border border-white/10 text-zinc-300">
           #{String(index + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}
         </span>
         {isTop && (
-          <span className="font-mono text-[10px] uppercase px-2.5 py-1 rounded-lg bg-cyan-400/15 backdrop-blur-md border border-cyan-400/30 text-cyan-300">
+          <span className="font-mono text-[10px] uppercase px-2.5 py-1 rounded bg-cyan-400/15 backdrop-blur-md border border-cyan-400/30 text-cyan-300">
             geser ↤ ↦
           </span>
         )}
@@ -410,7 +410,7 @@ function ArtistCard({
           </button>
 
           {isPlaying && (
-            <span className="inline-flex px-2.5 py-1 rounded-lg bg-cyan-400/15 border border-cyan-400/30 text-cyan-300 font-mono text-[10px] font-bold">
+            <span className="inline-flex px-2.5 py-1 rounded bg-cyan-400/15 border border-cyan-400/30 text-cyan-300 font-mono text-[10px] font-bold">
               PLAYING
             </span>
           )}
@@ -436,7 +436,7 @@ function TrackCard({
   onPlay: () => void;
 }) {
   return (
-    <div className="relative h-full w-full overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#0a0e18] shadow-2xl flex flex-col">
+    <div className="relative h-full w-full overflow-hidden rounded border border-white/10 bg-dark-900 shadow-2xl flex flex-col">
       {/* Cover half */}
       <div className="relative h-[52%] flex-shrink-0 overflow-hidden">
         <img
@@ -447,11 +447,11 @@ function TrackCard({
         />
         <div className="absolute inset-0 bg-black/30" />
 
-        <span className="absolute top-3.5 left-3.5 font-mono text-[11px] font-bold px-2.5 py-1 rounded-lg bg-black/55 backdrop-blur-md border border-white/10 text-zinc-300">
+        <span className="absolute top-3.5 left-3.5 font-mono text-[11px] font-bold px-2.5 py-1 rounded bg-black/55 backdrop-blur-md border border-white/10 text-zinc-300">
           #{String(index + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}
         </span>
         {isTop && (
-          <span className="absolute top-3.5 right-3.5 font-mono text-[10px] uppercase px-2.5 py-1 rounded-lg bg-cyan-400/15 backdrop-blur-md border border-cyan-400/30 text-cyan-300">
+          <span className="absolute top-3.5 right-3.5 font-mono text-[10px] uppercase px-2.5 py-1 rounded bg-cyan-400/15 backdrop-blur-md border border-cyan-400/30 text-cyan-300">
             geser ↤ ↦
           </span>
         )}
@@ -505,7 +505,7 @@ function TrackCard({
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 font-mono text-[10px] text-zinc-400">
             {track.genre && (
-              <span className="px-2 py-1 rounded-lg bg-white/5 border border-white/10">{track.genre}</span>
+              <span className="px-2 py-1 rounded bg-white/5 border border-white/10">{track.genre}</span>
             )}
             {track.duration && <span className="text-zinc-300 font-bold">{track.duration}</span>}
           </div>
@@ -514,7 +514,7 @@ function TrackCard({
               e.stopPropagation();
               onPlay();
             }}
-            className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl font-mono text-xs font-bold transition-all active:scale-95 ${
+            className={`inline-flex items-center gap-2 px-3.5 py-2 rounded font-mono text-xs font-bold transition-all active:scale-95 ${
               isPlaying
                 ? "bg-cyan-400 text-black"
                 : "bg-white/5 border border-white/15 text-zinc-100 hover:bg-white/15"

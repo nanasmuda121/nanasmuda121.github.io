@@ -60,7 +60,7 @@ export default function ProductCatalog() {
                 setActiveFilter(f.id);
                 playClickSound();
               }}
-              className={`px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl transition-all whitespace-nowrap flex items-center gap-2 ${
+              className={`px-4 py-2 sm:px-5 sm:py-2.5 rounded transition-all whitespace-nowrap flex items-center gap-2 ${
                 activeFilter === f.id
                   ? "bg-white text-black font-bold shadow-lg"
                   : "text-zinc-400 hover:text-white hover:bg-white/5"

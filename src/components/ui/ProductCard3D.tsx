@@ -29,7 +29,7 @@ export default function ProductCard3D({ product }: ProductCard3DProps) {
               <img
                 src={product.logo}
                 alt={`${product.title} Logo`}
-                className="w-full h-full object-contain rounded-xl"
+                className="w-full h-full object-contain rounded"
               />
             </div>
 
@@ -49,7 +49,7 @@ export default function ProductCard3D({ product }: ProductCard3DProps) {
           </div>
 
           {/* Category Icon */}
-          <div className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-zinc-400 flex-shrink-0">
+          <div className="p-2.5 rounded bg-white/5 border border-white/10 text-zinc-400 flex-shrink-0">
             {product.category === "Android Application" ? (
               <Smartphone className="w-5 h-5 text-emerald-400" />
             ) : (
@@ -66,7 +66,7 @@ export default function ProductCard3D({ product }: ProductCard3DProps) {
             </span>
             <span className="text-xs font-mono text-zinc-400">/ source code</span>
           </div>
-          <span className="font-mono text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-lg">
+          <span className="font-mono text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded">
             SIAP BUILD
           </span>
         </div>
@@ -94,7 +94,7 @@ export default function ProductCard3D({ product }: ProductCard3DProps) {
           {product.techStack.map((tech) => (
             <span
               key={tech}
-              className="font-mono text-xs text-zinc-300 bg-white/5 border border-white/10 px-2.5 py-1 rounded-lg"
+              className="font-mono text-xs text-zinc-300 bg-white/5 border border-white/10 px-2.5 py-1 rounded"
             >
               {tech}
             </span>
@@ -110,7 +110,7 @@ export default function ProductCard3D({ product }: ProductCard3DProps) {
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => playClickSound()}
-              className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-white/5 border border-white/10 text-zinc-200 hover:text-white hover:bg-white/10 font-bold transition-all"
+              className="flex items-center justify-center gap-2 py-3 px-4 rounded bg-white/5 border border-white/10 text-zinc-200 hover:text-white hover:bg-white/10 font-bold transition-all"
             >
               <span>Live Web</span>
               <ExternalLink className="w-4 h-4" />
@@ -123,7 +123,7 @@ export default function ProductCard3D({ product }: ProductCard3DProps) {
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => playClickSound()}
-              className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-white/5 border border-white/10 text-zinc-200 hover:text-white hover:bg-white/10 font-bold transition-all"
+              className="flex items-center justify-center gap-2 py-3 px-4 rounded bg-white/5 border border-white/10 text-zinc-200 hover:text-white hover:bg-white/10 font-bold transition-all"
             >
               <span>{product.apkUrl.includes("apkpure.com") ? "APKPure APK" : "Download APK"}</span>
               <Download className="w-4 h-4 text-emerald-400" />
@@ -136,7 +136,7 @@ export default function ProductCard3D({ product }: ProductCard3DProps) {
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => playClickSound()}
-            className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-cyber-cyan text-black font-bold hover:bg-cyber-cyan/90 transition-all shadow-md active:scale-95 col-span-1"
+            className="flex items-center justify-center gap-2 py-3 px-4 rounded bg-cyber-cyan text-black font-bold hover:bg-cyber-cyan/90 transition-all shadow-md active:scale-95 col-span-1"
           >
             <MessageCircle className="w-4 h-4 fill-current" />
             <span>Beli Source</span>
