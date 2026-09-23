@@ -11,18 +11,21 @@ const config: Config = {
     extend: {
       colors: {
         dark: {
-          950: "#050507",
-          900: "#090a0f",
+          950: "var(--bg-deep, #050507)",
+          900: "var(--bg-surface, #090a0f)",
           850: "#0f111a",
           800: "#161926",
           700: "#222638",
         },
         cyber: {
-          cyan: "#00f0ff",
+          cyan: "var(--accent-cyan, #00f0ff)",
           indigo: "#4f46e5",
           violet: "#8b5cf6",
           emerald: "#10b981",
           amber: "#f59e0b",
+        },
+        bg: {
+          card: "var(--bg-card, #060814)",
         },
       },
       fontFamily: {

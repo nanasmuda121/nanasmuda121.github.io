@@ -74,7 +74,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${archivo.variable} ${spaceMono.variable} bg-[#050507] text-[#ededed] min-h-screen antialiased selection:bg-[#00f0ff] selection:text-[#050507]`}
+        className={`${archivo.variable} ${spaceMono.variable} bg-dark-950 text-[var(--text-primary)] min-h-screen antialiased selection:bg-[var(--accent-cyan)] selection:text-[#050507]`}
       >
         {children}
       </body>

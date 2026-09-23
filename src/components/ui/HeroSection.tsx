@@ -4,10 +4,10 @@ import React from "react";
 import { motion } from "framer-motion";
 import HeroCanvas3D from "@/components/3d/HeroCanvas3D";
 import { PORTFOLIO_DATA } from "@/data/portfolioData";
-import { ArrowDown, MessageCircle, Sparkles, Check } from "lucide-react";
+import { ArrowDown, MessageCircle, Check } from "lucide-react";
 import { playClickSound } from "@/utils/audio";
 
-const ease = [0.16, 1, 0.3, 1] as const;
+const ease = [0.4, 0, 0.2, 1] as const;
 
 export default function HeroSection() {
   const identity = PORTFOLIO_DATA.identity;
@@ -19,18 +19,18 @@ export default function HeroSection() {
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease }}
-        className="flex items-center justify-between font-mono text-xs sm:text-sm md:text-base text-zinc-400 border-b border-white/10 pb-3.5"
+        className="flex items-center justify-between font-mono text-xs sm:text-sm md:text-base text-[var(--text-secondary)] border-b border-white/10 pb-3.5"
       >
         <div className="flex items-center gap-2.5 sm:gap-3">
-          <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="w-2.5 h-2.5 rounded-full bg-[var(--success-color)] animate-pulse" />
           <span className="text-white font-semibold tracking-wider">DEEP SPACE OBSERVATORY</span>
           <span className="text-zinc-600">•</span>
-          <span className="text-zinc-300">WA: {identity.phone}</span>
+          <span className="text-[var(--text-secondary)]">WA: {identity.phone}</span>
         </div>
         <div className="hidden sm:flex items-center gap-3 text-xs sm:text-sm">
           <span className="text-zinc-400">SIMULASI TATA SURYA &amp; ROKET</span>
           <span className="text-zinc-600">•</span>
-          <span className="text-cyber-cyan font-semibold">FULL SOURCE CODE</span>
+          <span className="text-[var(--accent-blue)] font-semibold">FULL SOURCE CODE</span>
         </div>
       </motion.div>
 
@@ -43,7 +43,6 @@ export default function HeroSection() {
             transition={{ duration: 0.6, ease, delay: 0.05 }}
           >
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyan-500/10 border border-cyber-cyan/30 font-mono text-xs sm:text-sm md:text-base text-cyber-cyan">
-              <Sparkles className="w-4 h-4 text-cyber-cyan" />
               <span className="font-semibold tracking-wide">ORBITAL SOURCE CODE &amp; DIGITAL PRODUCTS</span>
             </div>
           </motion.div>
@@ -86,7 +85,7 @@ export default function HeroSection() {
           <a
             href="#catalog"
             onClick={() => playClickSound()}
-            className="flex items-center justify-center gap-2.5 px-7 py-4 rounded-2xl bg-white text-black font-bold hover:bg-zinc-200 transition-all shadow-xl active:scale-95 whitespace-nowrap"
+            className="flex items-center justify-center gap-2.5 px-7 py-4 rounded bg-white text-black font-bold hover:bg-zinc-200 transition-all shadow-xl active:scale-95 whitespace-nowrap"
           >
             <span>Lihat Katalog Produk</span>
             <ArrowDown className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -97,7 +96,7 @@ export default function HeroSection() {
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => playClickSound()}
-            className="flex items-center justify-center gap-2.5 px-7 py-4 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-bold hover:bg-emerald-500/25 transition-all shadow-xl active:scale-95 whitespace-nowrap"
+            className="flex items-center justify-center gap-2.5 px-7 py-4 rounded bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-bold hover:bg-emerald-500/25 transition-all shadow-xl active:scale-95 whitespace-nowrap"
           >
             <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5" />
             <span>Hubungi WhatsApp</span>

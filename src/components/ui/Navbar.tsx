@@ -6,7 +6,7 @@ import { MessageCircle, Menu, X } from "lucide-react";
 import { PORTFOLIO_DATA } from "@/data/portfolioData";
 import { playClickSound } from "@/utils/audio";
 
-const ease = [0.16, 1, 0.3, 1] as const;
+const ease = [0.4, 0, 0.2, 1] as const;
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -24,7 +24,7 @@ export default function Navbar() {
       transition={{ duration: 0.6, ease }}
       className="fixed top-4 left-0 right-0 z-40 flex justify-center px-4 pointer-events-none"
     >
-      <nav className="pointer-events-auto w-full max-w-6xl xl:max-w-7xl bg-[#090b12]/90 backdrop-blur-xl border border-white/10 rounded-2xl px-5 py-3 sm:py-3.5 shadow-2xl flex items-center justify-between transition-all duration-300 hover:border-white/20">
+      <nav className="pointer-events-auto w-full max-w-6xl xl:max-w-7xl bg-dark-950/90 backdrop-blur-xl border border-white/10 rounded px-5 py-3 sm:py-3.5 shadow-2xl flex items-center justify-between transition-all duration-300 hover:border-white/20">
         {/* Brand Logo & Name */}
         <a
           href="#"
@@ -95,7 +95,7 @@ export default function Navbar() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -8, scale: 0.98 }}
             transition={{ duration: 0.25, ease }}
-            className="pointer-events-auto md:hidden fixed top-20 left-4 right-4 bg-[#090b14]/95 backdrop-blur-2xl border border-white/15 rounded-2xl p-4 shadow-2xl space-y-2 z-50 font-mono text-sm"
+            className="pointer-events-auto md:hidden fixed top-20 left-4 right-4 bg-[#090b14]/95 backdrop-blur-2xl border border-white/15 rounded p-4 shadow-2xl space-y-2 z-50 font-mono text-sm"
           >
             {navLinks.map((link) => (
               <a

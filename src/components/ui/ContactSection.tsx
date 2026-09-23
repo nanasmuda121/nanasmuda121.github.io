@@ -7,7 +7,7 @@ import { PORTFOLIO_DATA } from "@/data/portfolioData";
 import { playClickSound, playSuccessSound } from "@/utils/audio";
 import confetti from "canvas-confetti";
 
-const ease = [0.16, 1, 0.3, 1] as const;
+const ease = [0.4, 0, 0.2, 1] as const;
 
 export default function ContactSection() {
   const [copied, setCopied] = useState(false);
@@ -52,7 +52,7 @@ export default function ContactSection() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-80px" }}
         transition={{ duration: 0.7, ease }}
-        className="rounded-3xl bg-[#060814]/90 backdrop-blur-2xl border border-white/10 p-8 sm:p-12 md:p-16 shadow-2xl hover:border-cyber-cyan/30 transition-all"
+        className="rounded bg-dark-900/90 backdrop-blur-2xl border border-white/10 p-8 sm:p-12 md:p-16 shadow-2xl hover:border-cyber-cyan/30 transition-all"
       >
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
           <div className="lg:col-span-7 space-y-5">
@@ -70,14 +70,14 @@ export default function ContactSection() {
             </p>
 
             <div className="pt-2 flex flex-wrap items-center gap-3.5 font-mono text-xs sm:text-sm md:text-base">
-              <div className="flex items-center gap-2.5 px-5 py-3 rounded-2xl bg-white/5 border border-white/10 text-zinc-200">
+              <div className="flex items-center gap-2.5 px-5 py-3 rounded bg-white/5 border border-white/10 text-zinc-200">
                 <Phone className="w-4 h-4 text-emerald-400" />
                 <span className="select-all font-bold">{PORTFOLIO_DATA.identity.phone}</span>
               </div>
 
               <button
                 onClick={handleCopyPhone}
-                className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-white/5 border border-white/10 text-zinc-200 hover:text-white hover:bg-white/10 transition-colors font-medium active:scale-95"
+                className="flex items-center gap-2 px-5 py-3 rounded bg-white/5 border border-white/10 text-zinc-200 hover:text-white hover:bg-white/10 transition-colors font-medium active:scale-95"
               >
                 {copied ? (
                   <>
@@ -97,7 +97,7 @@ export default function ContactSection() {
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => playClickSound()}
-                className="flex items-center gap-2.5 px-6 py-3.5 rounded-2xl bg-emerald-500 text-black font-bold hover:bg-emerald-400 transition-all shadow-lg active:scale-95"
+                className="flex items-center gap-2.5 px-6 py-3.5 rounded bg-emerald-500 text-black font-bold hover:bg-emerald-400 transition-all shadow-lg active:scale-95"
               >
                 <MessageCircle className="w-4 h-4 fill-current" />
                 <span>Chat WhatsApp Langsung</span>
@@ -105,7 +105,7 @@ export default function ContactSection() {
             </div>
           </div>
 
-          <div className="lg:col-span-5 p-7 sm:p-8 rounded-3xl bg-black/50 border border-white/10 space-y-4 font-mono text-xs sm:text-sm md:text-base">
+          <div className="lg:col-span-5 p-7 sm:p-8 rounded bg-black/50 border border-white/10 space-y-4 font-mono text-xs sm:text-sm md:text-base">
             <div className="flex items-center gap-2.5 text-white font-bold pb-3 border-b border-white/10 text-sm sm:text-base">
               <ShieldCheck className="w-5 h-5 text-cyber-cyan" />
               <span>Jaminan Kualitas Kode</span>
@@ -141,7 +141,7 @@ export default function ContactSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-40px" }}
               transition={{ duration: 0.5, ease, delay: idx * 0.05 }}
-              className="p-6 sm:p-7 md:p-8 rounded-2xl bg-[#060814]/90 border border-white/10 space-y-2.5 hover:border-cyber-cyan/35 transition-all shadow-lg"
+              className="p-6 sm:p-7 md:p-8 rounded bg-dark-900/90 border border-white/10 space-y-2.5 hover:border-cyber-cyan/35 transition-all shadow-lg"
             >
               <h4 className="text-base sm:text-lg md:text-xl font-bold text-white tracking-tight leading-snug">
                 {faq.q}

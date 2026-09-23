@@ -5,8 +5,17 @@
 :root {
   --bg-deep: #050507;
   --bg-surface: #090a0f;
+  --bg-card: #060814;
   --border-subtle: rgba(255, 255, 255, 0.08);
   --border-highlight: rgba(0, 240, 255, 0.4);
+  --text-primary: #ededed;
+  --text-secondary: #64748b;
+  --accent-cyan: #00f0ff;
+  --accent-yellow: #facc15;
+  --accent-blue: #38bdf8;
+  --scrollbar-track: #050507;
+  --scrollbar-thumb: #1c2030;
+  --scrollbar-thumb-hover: #2a3048;
 }
 
 * {
@@ -22,9 +31,12 @@ html {
 
 body {
   background-color: var(--bg-deep);
-  color: #ededed;
+  color: var(--text-primary);
   overflow-x: hidden;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: var(--font-sans, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif);
+  font-size: 1rem;
+  line-height: 1.6;
+  letter-spacing: 0;
 }
 
 /* Display type from the reference aesthetic (Archivo-Black style) */
@@ -37,9 +49,33 @@ h3,
   letter-spacing: -0.015em !important;
 }
 
+h1 {
+  font-size: 3.5rem;
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+}
+
+h2 {
+  font-size: 2rem;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+h3 {
+  font-size: 1.5rem;
+  line-height: 1.3;
+  letter-spacing: -0.015em;
+}
+
+p {
+  font-size: 1rem;
+  line-height: 1.6;
+  letter-spacing: 0;
+}
+
 ::selection {
-  background: #00f0ff;
-  color: #050507;
+  background: var(--accent-cyan);
+  color: var(--bg-deep);
 }
 
 /* Custom Minimalist Scrollbar */
@@ -49,16 +85,16 @@ h3,
 }
 
 ::-webkit-scrollbar-track {
-  background: #050507;
+  background: var(--scrollbar-track);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1c2030;
-  border-radius: 3px;
+  background: var(--scrollbar-thumb);
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #2a3048;
+  background: var(--scrollbar-thumb-hover);
 }
 
 /* 3D Transform Utilities */
@@ -114,10 +150,10 @@ h3,
 .bg-stars-pattern {
   background-image: 
     radial-gradient(1px 1px at 25px 35px, #ffffff, rgba(0,0,0,0)),
-    radial-gradient(1px 1px at 85px 120px, #00f0ff, rgba(0,0,0,0)),
-    radial-gradient(1.5px 1.5px at 170px 65px, #facc15, rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 85px 120px, var(--accent-cyan), rgba(0,0,0,0)),
+    radial-gradient(1.5px 1.5px at 170px 65px, var(--accent-yellow), rgba(0,0,0,0)),
     radial-gradient(1px 1px at 240px 190px, #ffffff, rgba(0,0,0,0)),
-    radial-gradient(1.2px 1.2px at 320px 140px, #38bdf8, rgba(0,0,0,0)),
+    radial-gradient(1.2px 1.2px at 320px 140px, var(--accent-blue), rgba(0,0,0,0)),
     radial-gradient(1px 1px at 410px 220px, #ffffff, rgba(0,0,0,0));
   background-size: 460px 300px;
 }

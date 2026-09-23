@@ -6,7 +6,7 @@ import ProductCard3D from "@/components/ui/ProductCard3D";
 import { PORTFOLIO_DATA } from "@/data/portfolioData";
 import { playClickSound } from "@/utils/audio";
 
-const ease = [0.16, 1, 0.3, 1] as const;
+const ease = [0.4, 0, 0.2, 1] as const;
 
 export default function ProductCatalog() {
   const [activeFilter, setActiveFilter] = useState<string>("ALL");
@@ -52,7 +52,7 @@ export default function ProductCatalog() {
         </div>
 
         {/* Filter Pills */}
-        <div className="flex items-center gap-2 bg-[#060814]/95 p-1.5 rounded-2xl border border-white/10 font-mono text-xs sm:text-sm md:text-base overflow-x-auto scrollbar-none shadow-xl">
+        <div className="flex items-center gap-2 bg-dark-900/95 p-1.5 rounded border border-white/10 font-mono text-xs sm:text-sm md:text-base overflow-x-auto scrollbar-none shadow-xl">
           {filters.map((f) => (
             <button
               key={f.id}

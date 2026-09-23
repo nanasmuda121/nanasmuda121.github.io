@@ -18,7 +18,7 @@ import {
 import { FAVORITE_ARTISTS, FAVORITE_TRACKS, Artist, FavoriteTrack } from "@/data/musicData";
 import { playClickSound } from "@/utils/audio";
 
-const ease = [0.16, 1, 0.3, 1] as const;
+const ease = [0.4, 0, 0.2, 1] as const;
 
 interface NowPlaying {
   videoId?: string;
@@ -73,7 +73,7 @@ export default function MusicArtistsSection() {
         </div>
 
         {/* Tab switcher */}
-        <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-[#060814]/95 border border-white/10 font-mono text-xs shadow-xl">
+        <div className="flex items-center gap-1.5 p-1 rounded bg-dark-900/95 border border-white/10 font-mono text-xs shadow-xl">
           <button
             onClick={() => {
               setActiveTab("artists");
@@ -240,7 +240,7 @@ export default function MusicArtistsSection() {
               </div>
             </div>
 
-            <div className="overflow-hidden rounded-3xl border border-white/10 bg-[#0b0e16] shadow-2xl">
+            <div className="overflow-hidden rounded border border-white/10 bg-[#0b0e16] shadow-2xl">
               <iframe
                 key={playing.videoId}
                 src={`https://www.youtube-nocookie.com/embed/${playing.videoId}?autoplay=1&rel=0&playsinline=1`}
@@ -399,7 +399,7 @@ function ArtistCard({
               e.stopPropagation();
               onPlay();
             }}
-            className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-2xl bg-white text-black font-bold font-mono text-xs sm:text-sm hover:bg-zinc-200 transition-all shadow-xl active:scale-95"
+            className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded bg-white text-black font-bold font-mono text-xs sm:text-sm hover:bg-zinc-200 transition-all shadow-xl active:scale-95"
           >
             {isPlaying ? (
               <>
@@ -419,7 +419,7 @@ function ArtistCard({
               e.stopPropagation();
               onMore();
             }}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-zinc-200 font-mono text-xs hover:bg-white/10 transition-all"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded bg-white/5 border border-white/10 text-zinc-200 font-mono text-xs hover:bg-white/10 transition-all"
           >
             <Music className="w-4 h-4 text-cyan-400" />
             Kunjungi

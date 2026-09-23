@@ -18,14 +18,14 @@ export default function ProductCard3D({ product }: ProductCard3DProps) {
   return (
     <Card3D
       maxRotation={8}
-      className="p-6 sm:p-7 md:p-8 flex flex-col justify-between h-full bg-[#060814]/90 backdrop-blur-xl border border-white/10 hover:border-cyber-cyan/40 hover:shadow-[0_0_30px_rgba(0,240,255,0.12)] transition-all rounded-3xl"
+      className="p-6 sm:p-7 md:p-8 flex flex-col justify-between h-full bg-dark-900/90 backdrop-blur-xl border border-white/10 hover:border-cyber-cyan/40 hover:shadow-[0_0_30px_rgba(0,240,255,0.12)] transition-all rounded"
     >
       {/* Top Header: Logo + Title + Category */}
       <div>
         <div className="flex items-start justify-between gap-4 mb-4 sm:mb-5">
           <div className="flex items-center gap-3.5 sm:gap-4">
             {/* Real App Logo */}
-            <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden bg-black/60 border border-white/15 flex-shrink-0 flex items-center justify-center p-1.5 shadow-md">
+            <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded overflow-hidden bg-black/60 border border-white/15 flex-shrink-0 flex items-center justify-center p-1.5 shadow-md">
               <img
                 src={product.logo}
                 alt={`${product.title} Logo`}
@@ -59,7 +59,7 @@ export default function ProductCard3D({ product }: ProductCard3DProps) {
         </div>
 
         {/* Price Box */}
-        <div className="p-3.5 sm:p-4 rounded-2xl bg-white/[0.03] border border-white/5 flex items-center justify-between mb-4 sm:mb-5">
+        <div className="p-3.5 sm:p-4 rounded bg-white/[0.03] border border-white/5 flex items-center justify-between mb-4 sm:mb-5">
           <div className="flex items-baseline gap-2">
             <span className="text-2xl sm:text-3xl font-bold font-mono text-white tracking-tight">
               {product.formattedPrice}

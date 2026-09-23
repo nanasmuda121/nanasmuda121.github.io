@@ -3,7 +3,7 @@
 import React from "react";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 
-const ease = [0.16, 1, 0.3, 1] as const;
+const ease = [0.4, 0, 0.2, 1] as const;
 
 export interface DeckCardBase {
   id: string;

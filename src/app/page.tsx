@@ -10,7 +10,7 @@ import Footer from "@/components/ui/Footer";
 
 export default function HomePage() {
   return (
-    <div className="relative min-h-screen bg-[#030408] text-[#ededed] overflow-x-hidden selection:bg-cyber-cyan selection:text-black">
+    <div className="relative min-h-screen bg-dark-950 text-[var(--text-primary)] overflow-x-hidden selection:bg-cyber-cyan selection:text-black">
       {/* Deep Space Cosmic Atmosphere & Starlight Backdrop */}
       <div className="fixed inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(14,35,70,0.3),rgba(3,4,8,0))] pointer-events-none -z-10" />
       <div className="fixed inset-0 bg-stars-pattern opacity-30 pointer-events-none -z-20" />
